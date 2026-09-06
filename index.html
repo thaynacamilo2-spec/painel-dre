@@ -763,6 +763,7 @@ table.list tr:last-child td{border-bottom:none;}
           <textarea id="importInput" style="width:100%; height:90px; font-family:'IBM Plex Mono',monospace; font-size:11px; border:1px solid var(--line); border-radius:8px; padding:8px;"></textarea>
         </div>
         <button class="btn" id="btnImportar">Importar dados</button>
+        <div id="importStatus" style="display:none; margin-top:10px; font-size:12.5px; font-family:'IBM Plex Mono',monospace;"></div>
       </div>
     </div>
 
@@ -2057,13 +2058,28 @@ document.getElementById('btnImportar').addEventListener('click', async ()=>{
   try{ data = JSON.parse(raw); }
   catch(e){ showToast('Isso não parece um dado válido.'); return; }
   let count = 0;
+  const erros = [];
   for(const k of Object.keys(data)){
     if(data[k] != null){
-      try{ await window.storage.set(k, data[k]); count++; }catch(e){}
+      try{ await window.storage.set(k, data[k]); count++; }
+      catch(e){ erros.push(`${k}: ${e.message}`); }
     }
   }
-  showToast(`${count} conjunto(s) de dados importados. Recarregando...`);
-  setTimeout(()=>location.reload(), 1400);
+  const statusEl = document.getElementById('importStatus');
+  if(erros.length){
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--negative)';
+    statusEl.textContent = `${count} importado(s), ${erros.length} com erro — ${erros.join(' | ')}`;
+  } else if(count===0){
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--negative)';
+    statusEl.textContent = 'Nada foi importado — o texto colado não tinha dados (todos vieram nulos).';
+  } else {
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--positive)';
+    statusEl.textContent = `${count} conjunto(s) importados com sucesso. Recarregando...`;
+    setTimeout(()=>location.reload(), 1400);
+  }
 });
 
 /* ---------------- init ---------------- */
@@ -2108,18 +2124,29 @@ document.getElementById('btnImportar').addEventListener('click', async ()=>{
 
   window.storage = {
     get: async (k) => {
-      const res = await fetch(`/api/data?key=${encodeURIComponent(k)}&access=${encodeURIComponent(accessKey)}`);
+      let res;
+      try{ res = await fetch(`/api/data?key=${encodeURIComponent(k)}&access=${encodeURIComponent(accessKey)}`); }
+      catch(e){ throw new Error(`sem conexão com /api/data (${e.message})`); }
       if(res.status===401){ localStorage.removeItem('painelDreAccessKey'); location.reload(); return null; }
-      if(!res.ok) return null;
+      if(!res.ok){
+        const body = await res.text().catch(()=> '');
+        throw new Error(`GET falhou, status ${res.status} ${body.slice(0,120)}`);
+      }
       const data = await res.json();
       return (data && data.value != null) ? {key:k, value:data.value} : null;
     },
     set: async (k, value) => {
-      const res = await fetch(`/api/data?key=${encodeURIComponent(k)}&access=${encodeURIComponent(accessKey)}`, {
-        method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({value})
-      });
+      let res;
+      try{
+        res = await fetch(`/api/data?key=${encodeURIComponent(k)}&access=${encodeURIComponent(accessKey)}`, {
+          method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({value})
+        });
+      }catch(e){ throw new Error(`sem conexão com /api/data (${e.message})`); }
       if(res.status===401){ localStorage.removeItem('painelDreAccessKey'); location.reload(); return null; }
-      if(!res.ok) throw new Error('Falha ao salvar');
+      if(!res.ok){
+        const body = await res.text().catch(()=> '');
+        throw new Error(`PUT falhou, status ${res.status} ${body.slice(0,120)}`);
+      }
       return {key:k, value};
     }
   };
