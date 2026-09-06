@@ -1,3 +1,4 @@
+
 // Worker unico: serve o site (index.html), a API do painel (/api/data)
 // e a sincronizacao com a Reserva Ink (/api/reserva-ink/sync + agendamento diario)
 
@@ -55,6 +56,10 @@ async function handleApiData(request, env) {
 /* ---------------- integracao com a Reserva Ink ---------------- */
 
 const RESERVA_INK_BASE = 'https://api.reserva.ink';
+// So a VivaShop tem token/integracao com a Reserva Ink por enquanto. Adicionar
+// 'petnip' aqui (e um RESERVA_INK_TOKEN_PETNIP separado, se for o caso) quando
+// a Petnip tambem passar a usar a Reserva Ink.
+const RESERVA_INK_LOJAS = ['vivashop'];
 
 // busca todas as paginas de um endpoint que declara total_pages (orders, withdraws)
 async function fetchAllPages(url, token, arrayField, maxPages = 50) {
@@ -124,6 +129,7 @@ function monthBounds(monthKey) {
 }
 
 async function syncReservaInk(env, loja, monthKey) {
+  if (!RESERVA_INK_LOJAS.includes(loja)) throw new Error(`Loja "${loja}" ainda nao tem integracao com a Reserva Ink`);
   const token = env.RESERVA_INK_TOKEN;
   if (!token) throw new Error('RESERVA_INK_TOKEN nao configurado nas variaveis do projeto');
 
@@ -241,6 +247,58 @@ async function handleReservaInkSync(request, env) {
   }
 }
 
+// busca os pedidos crus (qualquer status) num intervalo de datas, pras abas de
+// Vendas agregarem no front-end (aggregateVendas/pedidoContaComoVenda ja
+// aplicam o filtro de reembolso/expirado/nao-autorizado/troca do lado do
+// cliente, entao aqui devolvemos tudo sem pre-filtrar por payment_status).
+async function fetchOrdersForRange(token, beginDateStr, endDateStr) {
+  const url = new URL(`${RESERVA_INK_BASE}/v1/stores/orders`);
+  url.searchParams.set('begin_date', beginDateStr);
+  url.searchParams.set('end_date', endDateStr);
+  return fetchAllPages(url, token, 'orders');
+}
+
+async function handleReservaInkOrders(request, env) {
+  const url = new URL(request.url);
+  if (!checkAccess(url, env)) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  const loja = url.searchParams.get('loja') || 'vivashop';
+  const begin = url.searchParams.get('begin');
+  const end = url.searchParams.get('end');
+  if (!begin || !end) {
+    return new Response(JSON.stringify({ ok: false, error: 'Faltou begin e/ou end (formato YYYY-MM-DD)' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  if (!RESERVA_INK_LOJAS.includes(loja)) {
+    return new Response(JSON.stringify({ ok: false, error: `Loja "${loja}" ainda nao tem integracao com a Reserva Ink` }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  const token = env.RESERVA_INK_TOKEN;
+  if (!token) {
+    return new Response(JSON.stringify({ ok: false, error: 'RESERVA_INK_TOKEN nao configurado nas variaveis do projeto' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  try {
+    const orders = await fetchOrdersForRange(token, begin, end);
+    return new Response(JSON.stringify({ ok: true, orders }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: e.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
 /* ---------------- worker ---------------- */
 
 export default {
@@ -252,6 +310,9 @@ export default {
     }
     if (url.pathname === '/api/reserva-ink/sync') {
       return handleReservaInkSync(request, env);
+    }
+    if (url.pathname === '/api/reserva-ink/orders') {
+      return handleReservaInkOrders(request, env);
     }
 
     // qualquer outra rota: serve os arquivos estaticos do site (index.html etc)
