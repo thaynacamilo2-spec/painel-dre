@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -373,6 +372,8 @@ table.list tr:last-child td{border-bottom:none;}
 .dre3-table tr.dre3-despesa-header:hover td{background:#E6E6E3;}
 .dre3-table td.dre3-custos-click{cursor:pointer;}
 .dre3-table td.dre3-custos-click:hover{text-decoration:underline; color:var(--accent);}
+.dre3-table th.dre3-extra-col{border-left:1.5px solid var(--ink); color:var(--accent);}
+.dre3-table td.dre3-extra-col{border-left:1.5px solid var(--line-soft); background:var(--accent-soft);}
 
 .empty{padding:36px 0; text-align:center; color:var(--muted); font-size:14px;}
 
@@ -639,9 +640,20 @@ table.list tr:last-child td{border-bottom:none;}
         Entradas da comissão recebida, despesas já vencidas e retiradas do proprietário — tudo conciliado num saldo só.
       </p>
 
+      <div class="month-nav">
+        <button id="caixaAcumAnt">‹</button>
+        <div class="month-label" id="caixaAcumLabel"></div>
+        <button id="caixaAcumProx">›</button>
+        <button class="today-btn" id="caixaAcumHoje">hoje</button>
+      </div>
+      <div class="filtro-botoes">
+        <div class="btn-group" id="caixaAcumAnoButtons"></div>
+        <div class="btn-group" id="caixaAcumMesButtons"></div>
+      </div>
+
       <div class="hero-row">
         <div class="hero-main">
-          <div class="label">Saldo de caixa acumulado</div>
+          <div class="label">Saldo de caixa acumulado <span class="hint" id="caixaSaldoHint"></span></div>
           <div class="value" id="caixaSaldo">R$ 0,00</div>
         </div>
         <div class="stat-group">
@@ -795,12 +807,20 @@ table.list tr:last-child td{border-bottom:none;}
     <div class="page" id="page-dre3">
       <h2 class="serif" style="margin-bottom:6px;">DRE</h2>
       <p style="color:var(--muted); font-size:13.5px; margin-top:0; margin-bottom:22px;">Visão lado a lado, igual à planilha — arraste a janela de 3 meses pros lados.</p>
-      <div class="month-nav" style="margin-bottom:20px;">
+      <div class="month-nav" style="margin-bottom:14px;">
         <button id="dre3Ant">‹</button>
         <div class="month-label" id="dre3Label"></div>
         <button id="dre3Prox">›</button>
         <button class="today-btn" id="dre3Hoje">hoje</button>
         <button class="btn secondary" id="btnExportarDre3" style="margin-left:auto;">Exportar Excel</button>
+      </div>
+      <div class="filtro-botoes" style="margin-bottom:20px;">
+        <span class="hint" style="align-self:center;">Coluna extra com o acumulado:</span>
+        <div class="btn-group" id="dre3ModoExtraButtons">
+          <button data-modo="nenhum" class="active">Nenhuma</button>
+          <button data-modo="ano">Ano</button>
+          <button data-modo="periodo">Período todo</button>
+        </div>
       </div>
       <div class="card" style="padding:0; overflow-x:auto;">
         <div id="dre3Table"></div>
@@ -1062,6 +1082,7 @@ let metaRoasYear = today.getFullYear();
 let metaRoasMonth = today.getMonth();
 let dre3AnchorDate = new Date(today.getFullYear(), today.getMonth(), 1);
 let dre3DespesasColapsadas = false;
+let dre3ModoExtra = 'nenhum'; // 'nenhum' | 'ano' | 'periodo' — coluna extra de total acumulado
 
 function css(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
 
@@ -1393,6 +1414,40 @@ function getGroupTotals(y,m){
   return { totals, d };
 }
 
+// Soma vários meses num único "resultado acumulado" (mesma forma de x.totals /
+// x.d.manual / x.custosTotal usada nas linhas da tabela DRE de 3 meses), pra
+// dar pra ver o total do Ano ou do Período todo, e não só mês a mês.
+function aggregateGroupTotals(monthsList){
+  const totals = {};
+  GRUPOS_DRE3.forEach(g=>totals[g]=0);
+  let vendasRealizadas=0, itensVendidos=0, faturamento=0, lucroBruto=0, facebookGasto=0, entradasMes=0, custos=0, totalTodasCategorias=0, diasSomados=0;
+  monthsList.forEach(mo=>{
+    const { totals: t, d } = getGroupTotals(mo.y, mo.m);
+    GRUPOS_DRE3.forEach(g=>{ totals[g] += t[g]; });
+    vendasRealizadas += d.manual.vendasRealizadas;
+    itensVendidos += d.manual.itensVendidos;
+    faturamento += d.manual.faturamento;
+    lucroBruto += d.manual.lucroBruto;
+    facebookGasto += d.facebookGasto;
+    entradasMes += d.entradasMes;
+    custos += d.custos;
+    totalTodasCategorias += d.totalTodasCategorias;
+    const isCurrentMonth = (mo.y===today.getFullYear() && mo.m===today.getMonth());
+    const diasNoMes = new Date(mo.y, mo.m+1, 0).getDate();
+    diasSomados += isCurrentMonth ? today.getDate() : diasNoMes;
+  });
+  const lucroLiquido = lucroBruto - custos;
+  const roi = custos>0 ? lucroLiquido/custos : NaN;
+  const roas = facebookGasto>0 ? faturamento/facebookGasto : NaN;
+  const pctLucroBruto = faturamento>0 ? lucroBruto/faturamento : NaN;
+  const margemGasto = facebookGasto>0 ? lucroBruto/facebookGasto : NaN;
+  const roasCaixa = facebookGasto>0 ? entradasMes/facebookGasto : NaN;
+  const mediaDiariaAds = diasSomados>0 ? facebookGasto/diasSomados : 0;
+  const custosTotal = GRUPOS_DRE3.reduce((a,g)=>a+totals[g],0);
+  const d = { manual: { vendasRealizadas, itensVendidos, faturamento, lucroBruto }, pctLucroBruto, lucroLiquido, roi, roas, mediaDiariaAds, margemGasto, roasCaixa };
+  return { totals, d, custosTotal };
+}
+
 function renderDre3Meses(){
   const anchor = dre3AnchorDate;
   const months = [-2,-1,0].map(offset=>{
@@ -1406,6 +1461,14 @@ function renderDre3Meses(){
     const custosTotal = GRUPOS_DRE3.reduce((a,g)=>a+totals[g],0);
     return { mo, totals, d, custosTotal };
   });
+
+  if(dre3ModoExtra === 'ano'){
+    const anoY = months[2].y;
+    const mesesDoAno = Array.from({length:12}, (_,i)=>({y:anoY, m:i}));
+    dataPerMonth.push({ label:`Ano ${anoY}`, ...aggregateGroupTotals(mesesDoAno) });
+  } else if(dre3ModoExtra === 'periodo'){
+    dataPerMonth.push({ label:'Total período', ...aggregateGroupTotals(getAllMonthsRange()) });
+  }
 
   const linhasTopo = [
     { label:'Vendas realizadas', get:(x)=>x.d.manual.vendasRealizadas, fmt:(v)=>Number(v||0).toLocaleString('pt-BR'), bold:true },
@@ -1435,19 +1498,20 @@ function renderDre3Meses(){
   ];
 
   const colspan = dataPerMonth.length + 1;
+  const extraColClass = (x) => x.mo ? '' : ' dre3-extra-col';
   const linhaHtml = (l) => {
     const cellStyle = l.bold ? ' style="font-weight:700;"' : '';
     const tds = dataPerMonth.map(x=>{
       const raw = l.get(x);
       let color = '';
       if(l.sinal && isFinite(raw)) color = raw>=0 ? 'var(--positive)' : 'var(--negative)';
-      return `<td class="num"${color?` style="color:${color};"`:''}>${l.fmt(raw)}</td>`;
+      return `<td class="num${extraColClass(x)}"${color?` style="color:${color};"`:''}>${l.fmt(raw)}</td>`;
     }).join('');
     return `<tr${cellStyle}><td>${l.label}</td>${tds}</tr>`;
   };
 
   let html = '<table class="dre3-table"><thead><tr><th></th>' +
-    dataPerMonth.map(x=>`<th>${MESES_ABREV[x.mo.m]}/${x.mo.y}</th>`).join('') + '</tr></thead><tbody>';
+    dataPerMonth.map(x=> x.mo ? `<th>${MESES_ABREV[x.mo.m]}/${x.mo.y}</th>` : `<th class="dre3-extra-col">${x.label}</th>`).join('') + '</tr></thead><tbody>';
   linhasTopo.forEach(l=>{ html += linhaHtml(l); });
   html += `<tr class="dre3-spacer"><td colspan="${colspan}"></td></tr>`;
   const arrow = dre3DespesasColapsadas ? '▸' : '▾';
@@ -1455,11 +1519,14 @@ function renderDre3Meses(){
   html += `<tr class="dre3-despesa-header" id="dre3ToggleDespesas"><td colspan="${colspan}">${arrow} Despesas <span style="font-weight:400; text-transform:none;">(${toggleHint})</span></td></tr>`;
   if(!dre3DespesasColapsadas){
     linhasDespesas.forEach(l=>{
-      const tds = dataPerMonth.map(x=>`<td class="num">${fmtBRL(l.get(x))}</td>`).join('');
+      const tds = dataPerMonth.map(x=>`<td class="num${extraColClass(x)}">${fmtBRL(l.get(x))}</td>`).join('');
       html += `<tr class="dre3-despesa"><td>${l.label}</td>${tds}</tr>`;
     });
   }
-  html += '<tr class="dre3-total"><td>Custos total</td>' + dataPerMonth.map(x=>`<td class="num dre3-custos-click" data-jump-y="${x.mo.y}" data-jump-m="${x.mo.m}">${fmtBRL(x.custosTotal)}</td>`).join('') + '</tr>';
+  html += '<tr class="dre3-total"><td>Custos total</td>' + dataPerMonth.map(x=> x.mo
+    ? `<td class="num dre3-custos-click" data-jump-y="${x.mo.y}" data-jump-m="${x.mo.m}">${fmtBRL(x.custosTotal)}</td>`
+    : `<td class="num${extraColClass(x)}">${fmtBRL(x.custosTotal)}</td>`
+  ).join('') + '</tr>';
   html += `<tr class="dre3-spacer"><td colspan="${colspan}"></td></tr>`;
   linhasResultado.forEach(l=>{ html += linhaHtml(l); });
   html += '</tbody></table>';
@@ -1477,17 +1544,35 @@ function renderDre3Meses(){
 }
 
 /* ---------------- caixa calculations ---------------- */
-function saldoCaixaAcumulado(){
+// Sem ateY/ateM: saldo acumulado de sempre (comportamento original, usado em
+// outros lugares como o Dashboard). Com ateY/ateM: saldo acumulado só até o
+// fim daquele mês (inclusive) — usado no filtro de "Saldo de caixa acumulado"
+// da aba Caixa, pra ver quanto tinha acumulado num mês/ano passado.
+function saldoCaixaAcumulado(ateY, ateM){
   const abreEm = caixa.abertura && caixa.abertura.data ? caixa.abertura.data : null;
   const abreEmKey = abreEm ? abreEm.slice(0,7) : null;
   const saldoInicial = caixa.abertura ? Number(caixa.abertura.saldoInicial)||0 : 0;
   const afterOpening = (dataStr) => !abreEm || dataStr >= abreEm;
-  const totalEntradas = caixa.entradas.filter(e=>afterOpening(e.data)).reduce((a,b)=>a+Number(b.valor),0);
-  const totalRetiradas = caixa.retiradas.filter(e=>afterOpening(e.data)).reduce((a,b)=>a+Number(b.valor),0);
+  const temCorte = (ateY !== undefined && ateM !== undefined);
+  const corteKey = temCorte ? monthKey(ateY, ateM) : null;
+  const corteLastDay = temCorte ? new Date(ateY, ateM+1, 0).getDate() : null;
+  const corteDataStr = temCorte ? `${ateY}-${pad(ateM+1)}-${pad(corteLastDay)}` : null;
+  const beforeCutoff = (dataStr) => !temCorte || dataStr <= corteDataStr;
+  const totalEntradas = caixa.entradas.filter(e=>afterOpening(e.data) && beforeCutoff(e.data)).reduce((a,b)=>a+Number(b.valor),0);
+  const totalRetiradas = caixa.retiradas.filter(e=>afterOpening(e.data) && beforeCutoff(e.data)).reduce((a,b)=>a+Number(b.valor),0);
   const totalDespesasPagas = getAllMonthsRange()
     .filter(mo=> !abreEmKey || monthKey(mo.y,mo.m) >= abreEmKey)
+    .filter(mo=> !temCorte || monthKey(mo.y,mo.m) <= corteKey)
     .reduce((a,mo)=>a+computeDRE(mo.y,mo.m).totalTodasCategorias, 0);
   return { saldo: saldoInicial + totalEntradas - totalDespesasPagas - totalRetiradas, totalEntradas, totalDespesasPagas, totalRetiradas, saldoInicial };
+}
+let caixaAcumuladoDate = new Date(today.getFullYear(), today.getMonth(), 1);
+function renderCaixaAcumFiltro(){
+  document.getElementById('caixaAcumLabel').textContent = `${MESES[caixaAcumuladoDate.getMonth()]} de ${caixaAcumuladoDate.getFullYear()}`;
+  renderYearMonthButtons('caixaAcumAnoButtons','caixaAcumMesButtons', caixaAcumuladoDate.getFullYear(), caixaAcumuladoDate.getMonth(), (y,m)=>{
+    caixaAcumuladoDate = new Date(y,m,1);
+    renderCaixa();
+  });
 }
 
 /* ---------------- rendering: painel ---------------- */
@@ -1785,7 +1870,11 @@ function renderDespesasList(){
 
 /* ---------------- rendering: caixa ---------------- */
 function renderCaixa(){
-  const s = saldoCaixaAcumulado();
+  renderCaixaAcumFiltro();
+  const ateY = caixaAcumuladoDate.getFullYear(), ateM = caixaAcumuladoDate.getMonth();
+  const isMesAtual = (ateY===today.getFullYear() && ateM===today.getMonth());
+  document.getElementById('caixaSaldoHint').textContent = isMesAtual ? '' : `— até ${MESES_ABREV[ateM]}/${ateY}`;
+  const s = saldoCaixaAcumulado(ateY, ateM);
   document.getElementById('caixaSaldo').textContent = fmtBRL(s.saldo);
   document.getElementById('caixaSaldo').className = 'value ' + (s.saldo>=0?'positive':'negative');
   document.getElementById('caixaEntradasTotal').textContent = fmtBRLShort(s.totalEntradas);
@@ -2314,6 +2403,7 @@ async function renderVendasDia(){
 /* --- Visão geral de vendas (por mês) --- */
 let vgYear = new Date().getFullYear();
 let vgMonth = new Date().getMonth();
+let vgAnoTodo = false;
 const pieColorsVg = ['#6C97C2','#8FB3D9','#A8C6E0','#4F7BA6','#C4DCEF','#7FA8CC','#365D80','#9CC2E3','#527FA8','#B7D3EA','#3D6F97','#D6E7F5','#2C4159','#E9F1F9'];
 function destroyChart(id){ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
 
@@ -2331,9 +2421,14 @@ function renderVgFiltroBotoes(){
     btn.addEventListener('click', ()=>{ vgYear = parseInt(btn.dataset.ano); renderVendasGeral(); });
   });
   const mesBox = document.getElementById('vgMesButtons');
-  mesBox.innerHTML = MESES_ABREV.map((label,i)=>`<button data-mes="${i}" class="${i===vgMonth?'active':''}">${label}</button>`).join('');
+  mesBox.innerHTML = MESES_ABREV.map((label,i)=>`<button data-mes="${i}" class="${!vgAnoTodo && i===vgMonth?'active':''}">${label}</button>`).join('')
+    + `<button data-mes="todo" class="${vgAnoTodo?'active':''}" style="margin-left:10px; font-weight:600;">Ano todo</button>`;
   mesBox.querySelectorAll('button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ vgMonth = parseInt(btn.dataset.mes); renderVendasGeral(); });
+    btn.addEventListener('click', ()=>{
+      if(btn.dataset.mes === 'todo'){ vgAnoTodo = true; }
+      else { vgAnoTodo = false; vgMonth = parseInt(btn.dataset.mes); }
+      renderVendasGeral();
+    });
   });
 }
 
@@ -2342,16 +2437,24 @@ async function renderVendasGeral(){
   const statusEl = document.getElementById('vgStatus');
   statusEl.textContent = 'Carregando…';
   try{
-    const [begin,end] = monthRangeStr(vgYear, vgMonth);
-    const [py,pm] = prevMonthYM(vgYear, vgMonth);
-    const [pBegin,pEnd] = monthRangeStr(py,pm);
+    let begin, end, pBegin, pEnd, labelPeriodo;
+    if(vgAnoTodo){
+      begin = `${vgYear}-01-01`; end = `${vgYear}-12-31`;
+      pBegin = `${vgYear-1}-01-01`; pEnd = `${vgYear-1}-12-31`;
+      labelPeriodo = `${vgYear} (ano todo)`;
+    } else {
+      [begin,end] = monthRangeStr(vgYear, vgMonth);
+      const [py,pm] = prevMonthYM(vgYear, vgMonth);
+      [pBegin,pEnd] = monthRangeStr(py,pm);
+      labelPeriodo = `${MESES_ABREV[vgMonth]}/${vgYear}`;
+    }
     const [orders, ordersAnt] = await Promise.all([
       fetchOrdersReservaInk(begin,end),
       fetchOrdersReservaInk(pBegin,pEnd)
     ]);
     const agg = aggregateVendas(orders);
     const aggAnt = aggregateVendas(ordersAnt);
-    statusEl.textContent = `${agg.totals.vendas} vendas em ${MESES_ABREV[vgMonth]}/${vgYear}`;
+    statusEl.textContent = `${agg.totals.vendas} vendas em ${labelPeriodo}`;
 
     const tiles = [
       ['Vendas', agg.totals.vendas, aggAnt.totals.vendas, v=>String(v)],
@@ -2487,6 +2590,16 @@ document.getElementById('dre3Ant').addEventListener('click', ()=>{ dre3AnchorDat
 document.getElementById('dre3Prox').addEventListener('click', ()=>{ dre3AnchorDate = new Date(dre3AnchorDate.getFullYear(), dre3AnchorDate.getMonth()+1, 1); renderDre3Meses(); });
 document.getElementById('dre3Hoje').addEventListener('click', ()=>{ dre3AnchorDate = new Date(today.getFullYear(), today.getMonth(), 1); renderDre3Meses(); });
 document.getElementById('btnExportarDre3').addEventListener('click', exportarDre3CSV);
+document.querySelectorAll('#dre3ModoExtraButtons button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    dre3ModoExtra = btn.dataset.modo;
+    document.querySelectorAll('#dre3ModoExtraButtons button').forEach(b=>b.classList.toggle('active', b===btn));
+    renderDre3Meses();
+  });
+});
+document.getElementById('caixaAcumAnt').addEventListener('click', ()=>{ caixaAcumuladoDate = new Date(caixaAcumuladoDate.getFullYear(), caixaAcumuladoDate.getMonth()-1, 1); renderCaixa(); });
+document.getElementById('caixaAcumProx').addEventListener('click', ()=>{ caixaAcumuladoDate = new Date(caixaAcumuladoDate.getFullYear(), caixaAcumuladoDate.getMonth()+1, 1); renderCaixa(); });
+document.getElementById('caixaAcumHoje').addEventListener('click', ()=>{ caixaAcumuladoDate = new Date(today.getFullYear(), today.getMonth(), 1); renderCaixa(); });
 bindManualInput('inVendasRealizadas','vendasRealizadas');
 bindManualInput('inItensVendidos','itensVendidos');
 bindManualInput('inFaturamento','faturamento');
