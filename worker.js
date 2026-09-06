@@ -144,10 +144,15 @@ async function syncReservaInk(env, loja, monthKey) {
   }
   const vendasRealizadas = orders.length;
 
-  // 2. antecipacoes do mes -> taxa zoop
+  // 2. antecipacoes (adiantamentos) do mes -> juros de antecipacao
+  // Importante: o campo zoop_fee que a Reserva Ink devolve aqui e a parte da
+  // Zoop no CUSTO DE ANTECIPAR recebiveis (junto com partner_fee, a parte da
+  // Reserva Ink) - nao e a taxa de processamento por venda. Os dois juntos
+  // (partner_fee + zoop_fee) formam o "juros" que a antecipacao custou no mes,
+  // por isso viram um numero separado (jurosAntecipacao), sem tocar em taxaZoop.
   const prepayments = await fetchPrepaymentsForMonth(token, monthStart, monthEnd);
-  let taxaZoop = 0;
-  for (const p of prepayments) taxaZoop += Number(p.zoop_fee) || 0;
+  let jurosAntecipacao = 0;
+  for (const p of prepayments) jurosAntecipacao += (Number(p.partner_fee) || 0) + (Number(p.zoop_fee) || 0);
 
   // 3. saques do mes -> entradas de caixa (repasse)
   const withdrawsUrl = new URL(`${RESERVA_INK_BASE}/v1/stores/withdraws`);
@@ -165,7 +170,11 @@ async function syncReservaInk(env, loja, monthKey) {
     itensVendidos,
     faturamento: Number(faturamento.toFixed(2)),
     lucroBruto: Number(lucroBruto.toFixed(2)),
-    taxaZoop: Number(taxaZoop.toFixed(2))
+    jurosAntecipacao: Number(jurosAntecipacao.toFixed(2))
+    // taxaZoop nao e mais preenchido automaticamente: o zoop_fee das
+    // antecipacoes nao e a taxa de venda, e sobrescrever taxaZoop com ele
+    // apagava o valor real que era controlado manualmente. Taxa Zoop
+    // continua 100% manual (aba Despesas ou o campo no Painel do mes).
   });
   await env.DRE_KV.put(`dre_data_${loja}`, JSON.stringify(dre));
 
@@ -201,7 +210,7 @@ async function syncReservaInk(env, loja, monthKey) {
     vendasRealizadas, itensVendidos,
     faturamento: Number(faturamento.toFixed(2)),
     lucroBruto: Number(lucroBruto.toFixed(2)),
-    taxaZoop: Number(taxaZoop.toFixed(2)),
+    jurosAntecipacao: Number(jurosAntecipacao.toFixed(2)),
     novasEntradasCaixa: novasEntradas,
     pedidosEncontrados: orders.length,
     antecipacoesEncontradas: prepayments.length,
