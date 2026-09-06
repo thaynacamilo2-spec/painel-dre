@@ -750,6 +750,20 @@ table.list tr:last-child td{border-bottom:none;}
           <tbody id="catList"></tbody>
         </table>
       </div>
+
+      <div class="section-title">Exportar / importar dados <span class="hint">migrar entre versões do app (ex: Claude → link publicado)</span></div>
+      <div class="card">
+        <p style="color:var(--muted); font-size:13px; margin-top:0;">Gera um bloco de texto com os dados de VivaShop e Petnip (DRE + Caixa) pra você colar na outra versão do app.</p>
+        <button class="btn secondary" id="btnExportar">Gerar dados pra copiar</button>
+        <textarea id="exportOutput" readonly style="width:100%; height:90px; font-family:'IBM Plex Mono',monospace; font-size:11px; margin-top:10px; display:none; border:1px solid var(--line); border-radius:8px; padding:8px;"></textarea>
+        <button class="btn secondary" id="btnCopiarExport" style="display:none; margin-top:8px;">Copiar</button>
+
+        <div class="field-row" style="margin-top:24px; margin-bottom:10px;">
+          <label>Importar (cole aqui o que foi exportado da outra versão)</label>
+          <textarea id="importInput" style="width:100%; height:90px; font-family:'IBM Plex Mono',monospace; font-size:11px; border:1px solid var(--line); border-radius:8px; padding:8px;"></textarea>
+        </div>
+        <button class="btn" id="btnImportar">Importar dados</button>
+      </div>
     </div>
 
   </div>
@@ -2013,6 +2027,43 @@ document.getElementById('catNovaAdd').addEventListener('click', async ()=>{
   await saveDre();
   document.getElementById('catNovaInput').value = '';
   renderAll();
+});
+
+/* ---------------- events: exportar/importar ---------------- */
+const CHAVES_EXPORT = ['dre_data_vivashop','caixa_data_vivashop','dre_data_petnip','caixa_data_petnip'];
+document.getElementById('btnExportar').addEventListener('click', async ()=>{
+  const out = {};
+  for(const k of CHAVES_EXPORT){
+    try{ const r = await window.storage.get(k); out[k] = r ? r.value : null; }
+    catch(e){ out[k] = null; }
+  }
+  const json = JSON.stringify(out);
+  const ta = document.getElementById('exportOutput');
+  ta.value = json;
+  ta.style.display = 'block';
+  document.getElementById('btnCopiarExport').style.display = 'inline-flex';
+  showToast('Dados gerados — copia e leva pra outra versão do app.');
+});
+document.getElementById('btnCopiarExport').addEventListener('click', async ()=>{
+  const ta = document.getElementById('exportOutput');
+  ta.select();
+  try{ await navigator.clipboard.writeText(ta.value); showToast('Copiado!'); }
+  catch(e){ showToast('Seleciona o texto e copia manualmente (Ctrl+C ou Cmd+C).'); }
+});
+document.getElementById('btnImportar').addEventListener('click', async ()=>{
+  const raw = document.getElementById('importInput').value.trim();
+  if(!raw){ showToast('Cola os dados exportados primeiro.'); return; }
+  let data;
+  try{ data = JSON.parse(raw); }
+  catch(e){ showToast('Isso não parece um dado válido.'); return; }
+  let count = 0;
+  for(const k of Object.keys(data)){
+    if(data[k] != null){
+      try{ await window.storage.set(k, data[k]); count++; }catch(e){}
+    }
+  }
+  showToast(`${count} conjunto(s) de dados importados. Recarregando...`);
+  setTimeout(()=>location.reload(), 1400);
 });
 
 /* ---------------- init ---------------- */
