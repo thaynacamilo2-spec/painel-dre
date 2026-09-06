@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -508,7 +509,12 @@ table.list tr:last-child td{border-bottom:none;}
 
       <div class="grid-2" style="margin-top:28px;">
         <div>
-          <div class="section-title">Despesas do mês <span class="hint">só o que já venceu</span></div>
+          <div class="section-title">Despesas do mês <span class="hint" id="despesasLedgerHint">só o que já venceu</span>
+            <div class="btn-group" id="despesasLedgerFiltro" style="margin-top:2px;">
+              <button data-filtro="hoje" class="active" type="button">Hoje</button>
+              <button data-filtro="mes-todo" type="button">Mês todo</button>
+            </div>
+          </div>
           <div class="card" id="despesasLedger"></div>
         </div>
         <div>
@@ -516,6 +522,12 @@ table.list tr:last-child td{border-bottom:none;}
             <button class="btn secondary" id="btnSyncReservaInk" style="font-size:12px; padding:6px 12px;">Atualizar via Reserva Ink</button>
           </div>
           <div id="syncReservaInkStatus" style="display:none; font-size:12px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;"></div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:10px 12px; background:var(--accent-soft); border-radius:8px;">
+            <span style="font-size:12px; color:var(--muted); white-space:nowrap;">Primeira vez usando? Traga o histórico:</span>
+            <input type="month" id="inSyncHistoricoDesde" style="font-size:12.5px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:'Inter',sans-serif; background:var(--card);">
+            <button class="btn secondary" id="btnSyncHistorico" style="font-size:12px; padding:6px 12px;">Sincronizar até hoje</button>
+          </div>
+          <div id="syncHistoricoStatus" style="display:none; font-size:12px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;"></div>
           <div class="card">
             <div class="dados-mes-grid">
               <div class="dados-tile">
@@ -599,6 +611,10 @@ table.list tr:last-child td{border-bottom:none;}
             <div class="field-row" style="margin-bottom:0;">
               <label>Categoria</label>
               <select id="filtroCategoria"></select>
+            </div>
+            <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
+              <div class="hint" style="margin-bottom:2px;">Total do filtro atual <span style="color:var(--muted);">— inclui despesas futuras, mesmo sem vencer ainda</span></div>
+              <div class="serif" style="font-size:22px; font-weight:600;" id="despesasFiltroTotal">R$ 0,00</div>
             </div>
           </div>
         </div>
@@ -828,7 +844,6 @@ table.list tr:last-child td{border-bottom:none;}
     <div class="page" id="page-vendas-dia">
       <h2 class="serif" style="margin-bottom:6px;">Vendas por dia</h2>
       <p style="color:var(--muted); font-size:13.5px; margin-top:0; margin-bottom:18px;">Movimento diário e ranking de produtos mais vendidos, vindo da Reserva Ink.</p>
-      <div style="background:#FFF4E0; border:1px solid #E8C989; color:#7A5A12; border-radius:8px; padding:10px 14px; font-size:12.5px; margin-bottom:18px;">⚠ <strong>Dados simulados.</strong> Essa aba ainda não está ligada na Reserva Ink de verdade — os números aqui são inventados só pra você avaliar o layout. Vão sumir assim que conectarmos a API de verdade.</div>
 
       <div class="periodo-filter">
         <div class="field-row"><label>De</label><input type="date" id="vdDataIni"></div>
@@ -863,7 +878,6 @@ table.list tr:last-child td{border-bottom:none;}
     <div class="page" id="page-vendas-geral">
       <h2 class="serif" style="margin-bottom:6px;">Visão geral de vendas</h2>
       <p style="color:var(--muted); font-size:13.5px; margin-top:0; margin-bottom:18px;">Resumo do mês, comparado com o mês anterior — vindo da Reserva Ink.</p>
-      <div style="background:#FFF4E0; border:1px solid #E8C989; color:#7A5A12; border-radius:8px; padding:10px 14px; font-size:12.5px; margin-bottom:18px;">⚠ <strong>Dados simulados.</strong> Essa aba ainda não está ligada na Reserva Ink de verdade — os números aqui são inventados só pra você avaliar o layout. Vão sumir assim que conectarmos a API de verdade.</div>
 
       <div class="filtro-botoes" style="margin-bottom:18px;">
         <div class="btn-group" id="vgAnoButtons"></div>
@@ -1038,6 +1052,7 @@ let caixa = { entradas: [], retiradas: [], saldoBanco: { valor: 0, atualizadoEm:
 let viewDate = new Date();
 viewDate.setDate(1);
 const today = new Date();
+let despesasLedgerFiltro = 'hoje'; // 'hoje' (só o que já venceu) ou 'mes-todo' (inclui despesas futuras) — só afeta a visão da carta "Despesas do mês", não os KPIs/DRE
 let editingId = null;
 let editingEntradaId = null;
 let editingRetiradaId = null;
@@ -1284,6 +1299,30 @@ function sumByCategory(y,m){
   dre.categories.forEach(c=>out[c.nome]=0);
   list.forEach(e=>{ out[e.categoria] = (out[e.categoria]||0) + Number(e.valor); });
   return out;
+}
+// Igual a expensesForMonth/sumByCategory, mas sem o filtro de "já venceu" —
+// usado só pra dar uma prévia visual do mês (ex: "Mês todo" na carta Despesas
+// do mês), nunca pro cálculo de DRE/Lucro Líquido/ROI/ROAS.
+function expensesForMonthTodas(y,m){
+  return dre.expenses.filter(e=>{
+    const d = expenseDate(e);
+    return d.getFullYear()===y && d.getMonth()===m;
+  });
+}
+function sumByCategoryTodas(y,m){
+  const list = expensesForMonthTodas(y,m);
+  const out = {};
+  dre.categories.forEach(c=>out[c.nome]=0);
+  list.forEach(e=>{ out[e.categoria] = (out[e.categoria]||0) + Number(e.valor); });
+  return out;
+}
+function byCatParaLedger(y,m,incluirFuturas){
+  const byCat = incluirFuturas ? sumByCategoryTodas(y,m) : sumByCategory(y,m);
+  const taxaZoopManual = getTaxaZoopManual(y,m);
+  if(taxaZoopManual !== null){ byCat['Taxa Zoop'] = taxaZoopManual; }
+  const jurosAntecipacaoManual = getJurosAntecipacaoManual(y,m);
+  if(jurosAntecipacaoManual !== null){ byCat['Juros de Antecipação'] = jurosAntecipacaoManual; }
+  return byCat;
 }
 function totalCustos(y,m){
   const byCat = sumByCategory(y,m);
@@ -1545,30 +1584,34 @@ function renderPainel(){
   if(isPainelActive()) renderPainelCharts();
 
   const ledger = document.getElementById('despesasLedger');
-  const catsDRE = dre.categories.filter(c=>c.entraDRE && d.byCat[c.nome] !== 0).sort((a,b)=>d.byCat[b.nome]-d.byCat[a.nome]);
-  const catsFora = dre.categories.filter(c=>!c.entraDRE && d.byCat[c.nome] !== 0).sort((a,b)=>d.byCat[b.nome]-d.byCat[a.nome]);
-  const totalGeralDespesas = d.custos + catsFora.reduce((a,c)=>a+d.byCat[c.nome],0);
+  const incluirFuturas = despesasLedgerFiltro === 'mes-todo';
+  const byCatLedger = byCatParaLedger(y, m, incluirFuturas);
+  document.getElementById('despesasLedgerHint').textContent = incluirFuturas ? 'mês inteiro, inclui o que ainda não venceu' : 'só o que já venceu';
+  const catsDRE = dre.categories.filter(c=>c.entraDRE && byCatLedger[c.nome] !== 0).sort((a,b)=>byCatLedger[b.nome]-byCatLedger[a.nome]);
+  const catsFora = dre.categories.filter(c=>!c.entraDRE && byCatLedger[c.nome] !== 0).sort((a,b)=>byCatLedger[b.nome]-byCatLedger[a.nome]);
+  const custosLedger = catsDRE.reduce((a,c)=>a+byCatLedger[c.nome],0);
+  const totalGeralDespesas = custosLedger + catsFora.reduce((a,c)=>a+byCatLedger[c.nome],0);
   const pct = (v) => totalGeralDespesas!==0 ? ((v/totalGeralDespesas)*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%' : '—';
   if(catsDRE.length===0 && catsFora.length===0){
-    ledger.innerHTML = '<div class="empty">Nenhuma despesa vencida neste mês ainda.</div>';
+    ledger.innerHTML = `<div class="empty">Nenhuma despesa ${incluirFuturas ? 'lançada' : 'vencida'} neste mês ainda.</div>`;
   } else {
     let html = catsDRE.map(c=>`
       <div class="ledger-row">
-        <span class="name">${c.nome}${d.byCat[c.nome]<0 ? ' <span style="font-size:11px; color:var(--positive);">(crédito)</span>' : ''}</span><span class="leader"></span>
-        <span class="pct">${pct(d.byCat[c.nome])}</span>
-        <span class="amt" style="${d.byCat[c.nome]<0?'color:var(--positive);':''}">${fmtBRL(d.byCat[c.nome])}</span>
+        <span class="name">${c.nome}${byCatLedger[c.nome]<0 ? ' <span style="font-size:11px; color:var(--positive);">(crédito)</span>' : ''}</span><span class="leader"></span>
+        <span class="pct">${pct(byCatLedger[c.nome])}</span>
+        <span class="amt" style="${byCatLedger[c.nome]<0?'color:var(--positive);':''}">${fmtBRL(byCatLedger[c.nome])}</span>
       </div>`).join('') + `
       <div class="ledger-row total">
         <span class="name">Total de custos (DRE)</span><span class="leader"></span>
         <span class="pct"></span>
-        <span class="amt">${fmtBRL(d.custos)}</span>
+        <span class="amt">${fmtBRL(custosLedger)}</span>
       </div>`;
     if(catsFora.length){
       html += catsFora.map(c=>`
         <div class="ledger-row sub">
           <span class="name">${c.nome} <span style="font-size:11px;">(fora do DRE)</span></span><span class="leader"></span>
-          <span class="pct">${pct(d.byCat[c.nome])}</span>
-          <span class="amt">${fmtBRL(d.byCat[c.nome])}</span>
+          <span class="pct">${pct(byCatLedger[c.nome])}</span>
+          <span class="amt">${fmtBRL(byCatLedger[c.nome])}</span>
         </div>`).join('');
     }
     ledger.innerHTML = html;
@@ -1659,6 +1702,9 @@ function renderDespesasList(){
   if(filtroMes){ list = list.filter(e=>{ const d=expenseDate(e); return monthKey(d.getFullYear(),d.getMonth())===filtroMes; }); }
   if(filtroCat){ list = list.filter(e=>e.categoria===filtroCat); }
   list.sort((a,b)=> b.data.localeCompare(a.data));
+
+  const totalFiltro = list.reduce((a,e)=>a+Number(e.valor), 0);
+  document.getElementById('despesasFiltroTotal').textContent = fmtBRL(totalFiltro);
 
   const tbody = document.querySelector('#despesasTable tbody');
   const empty = document.getElementById('despesasEmpty');
@@ -2480,6 +2526,56 @@ document.getElementById('btnSyncReservaInk').addEventListener('click', async ()=
   btn.textContent = 'Atualizar via Reserva Ink';
 });
 
+document.getElementById('btnSyncHistorico').addEventListener('click', async ()=>{
+  const desde = document.getElementById('inSyncHistoricoDesde').value; // "YYYY-MM"
+  if(!desde){ showToast('Escolhe o mês inicial pra trazer o histórico.'); return; }
+  const [dyStr, dmStr] = desde.split('-');
+  const dy = parseInt(dyStr,10), dm = parseInt(dmStr,10);
+  const now = new Date();
+  const meses = [];
+  let y = dy, m = dm;
+  while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth()+1)) {
+    meses.push(`${y}-${pad(m)}`);
+    m++; if(m>12){ m=1; y++; }
+  }
+  if(meses.length === 0){ showToast('Escolhe um mês no passado ou o mês atual.'); return; }
+  if(meses.length > 36){ showToast('Período muito longo (máx. 36 meses de uma vez) — escolhe uma data mais recente.'); return; }
+
+  const statusEl = document.getElementById('syncHistoricoStatus');
+  const btn = document.getElementById('btnSyncHistorico');
+  const accessKey = localStorage.getItem('painelDreAccessKey') || '';
+  btn.disabled = true;
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--muted)';
+
+  let totalVendas = 0, totalNovasEntradas = 0, mesesComErro = [];
+  for(let i=0; i<meses.length; i++){
+    const mk = meses[i];
+    statusEl.textContent = `Sincronizando ${i+1}/${meses.length}: ${mk}...`;
+    try{
+      const res = await fetch(`/api/reserva-ink/sync?loja=${loja}&month=${mk}&access=${encodeURIComponent(accessKey)}`);
+      const data = await res.json();
+      if(res.ok && data.ok){ totalVendas += data.vendasRealizadas; totalNovasEntradas += data.novasEntradasCaixa; }
+      else mesesComErro.push(mk);
+    }catch(e){ mesesComErro.push(mk); }
+    await new Promise(r=>setTimeout(r, 250)); // não martelar a API da Reserva Ink
+  }
+
+  await loadStore();
+  renderAll();
+  statusEl.style.color = mesesComErro.length ? 'var(--negative)' : 'var(--positive)';
+  statusEl.textContent = `Histórico sincronizado: ${meses.length} mês(es), ${totalVendas} vendas encontradas, ${totalNovasEntradas} nova(s) entrada(s) no caixa` + (mesesComErro.length ? `. Deu erro em: ${mesesComErro.join(', ')} — tenta de novo só esses meses.` : '.');
+  btn.disabled = false;
+});
+
+document.querySelectorAll('#despesasLedgerFiltro button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    despesasLedgerFiltro = btn.dataset.filtro;
+    document.querySelectorAll('#despesasLedgerFiltro button').forEach(b=>b.classList.toggle('active', b===btn));
+    renderPainel();
+  });
+});
+
 /* ---------------- events: despesas ---------------- */
 document.getElementById('despCategoria').addEventListener('change', (e)=>{
   document.getElementById('newcatBox').style.display = e.target.value==='__nova__' ? 'flex' : 'none';
@@ -2791,6 +2887,21 @@ document.getElementById('btnImportar').addEventListener('click', async ()=>{
       }
       return {key:k, value};
     }
+  };
+
+  // Substitui o gerador de pedidos simulados (definido lá em cima, no bloco de
+  // fallback pra pré-visualização) pela busca de verdade na Reserva Ink, via
+  // Worker. A partir daqui as abas de Vendas usam dados reais.
+  window.fetchOrdersReservaInk = async function(lojaAtual, beginDateStr, endDateStr){
+    const res = await fetch(`/api/reserva-ink/orders?loja=${encodeURIComponent(lojaAtual)}&begin=${beginDateStr}&end=${endDateStr}&access=${encodeURIComponent(accessKey)}`);
+    if(res.status===401){ localStorage.removeItem('painelDreAccessKey'); location.reload(); return []; }
+    if(!res.ok){
+      const body = await res.text().catch(()=> '');
+      throw new Error(`GET /api/reserva-ink/orders falhou, status ${res.status} ${body.slice(0,120)}`);
+    }
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.error || 'Erro desconhecido buscando pedidos na Reserva Ink');
+    return data.orders || [];
   };
 
   runPainelApp();
