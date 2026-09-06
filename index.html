@@ -548,7 +548,7 @@ table.list tr:last-child td{border-bottom:none;}
         </div>
       </div>
 
-      <div class="section-title">Histórico de lançamentos</div>
+      <div class="section-title">Histórico de lançamentos <button class="btn secondary" id="btnExportarDespesas" style="font-size:12.5px; padding:6px 12px;">Exportar Excel</button></div>
       <div class="card" style="padding:0; overflow:hidden;">
         <div style="max-height:480px; overflow-y:auto; padding:8px 22px;">
           <table class="list" id="despesasTable">
@@ -728,6 +728,7 @@ table.list tr:last-child td{border-bottom:none;}
         <div class="month-label" id="dre3Label"></div>
         <button id="dre3Prox">›</button>
         <button class="today-btn" id="dre3Hoje">hoje</button>
+        <button class="btn secondary" id="btnExportarDre3" style="margin-left:auto;">Exportar Excel</button>
       </div>
       <div class="card" style="padding:0; overflow-x:auto;">
         <div id="dre3Table"></div>
@@ -868,6 +869,96 @@ function fmtCompactX(v){
   if(!isFinite(v)) return '';
   return v.toLocaleString('pt-BR',{maximumFractionDigits:2}) + 'x';
 }
+
+/* ---------------- exportar para excel (csv) ---------------- */
+function csvNumero(v, casas=2){
+  if(!isFinite(v)) return '';
+  return Number(v).toLocaleString('pt-BR', {minimumFractionDigits:casas, maximumFractionDigits:casas});
+}
+function downloadCSV(filename, rows){
+  const linhas = rows.map(r => r.map(cell => {
+    const s = String(cell ?? '');
+    if(s.includes(';') || s.includes('"') || s.includes('\n')){
+      return '"' + s.replace(/"/g,'""') + '"';
+    }
+    return s;
+  }).join(';'));
+  const csv = linhas.join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function exportarDre3CSV(){
+  const anchor = dre3AnchorDate;
+  const months = [-2,-1,0].map(offset=>{
+    const dt = new Date(anchor.getFullYear(), anchor.getMonth()+offset, 1);
+    return { y: dt.getFullYear(), m: dt.getMonth() };
+  });
+  const dataPerMonth = months.map(mo=>{
+    const { totals, d } = getGroupTotals(mo.y, mo.m);
+    const custosTotal = GRUPOS_DRE3.reduce((a,g)=>a+totals[g],0);
+    return { mo, totals, d, custosTotal };
+  });
+  const rows = [['', ...dataPerMonth.map(x=>`${MESES_ABREV[x.mo.m]}/${x.mo.y}`)]];
+  const linha = (label, valores) => rows.push([label, ...valores]);
+
+  linha('Vendas realizadas', dataPerMonth.map(x=>csvNumero(x.d.manual.vendasRealizadas,0)));
+  linha('Itens vendidos', dataPerMonth.map(x=>csvNumero(x.d.manual.itensVendidos,0)));
+  linha('Faturamento', dataPerMonth.map(x=>csvNumero(x.d.manual.faturamento)));
+  linha('Lucro bruto', dataPerMonth.map(x=>csvNumero(x.d.manual.lucroBruto)));
+  linha('% Lucro Bruto', dataPerMonth.map(x=>isFinite(x.d.pctLucroBruto) ? csvNumero(x.d.pctLucroBruto*100,1)+'%' : ''));
+  rows.push([]);
+  linha('Facebook', dataPerMonth.map(x=>csvNumero(x.totals['Facebook'])));
+  linha('Marketing', dataPerMonth.map(x=>csvNumero(x.totals['Marketing'])));
+  linha('Taxa Zoop', dataPerMonth.map(x=>csvNumero(x.totals['Taxa Zoop'])));
+  linha('Mensalidade INK', dataPerMonth.map(x=>csvNumero(x.totals['Mensalidade INK'])));
+  linha('Contabilidade', dataPerMonth.map(x=>csvNumero(x.totals['Contabilidade'])));
+  linha('Outros', dataPerMonth.map(x=>csvNumero(x.totals['Outros'])));
+  linha('Assinaturas', dataPerMonth.map(x=>csvNumero(x.totals['Assinaturas'])));
+  linha('Bancos', dataPerMonth.map(x=>csvNumero(x.totals['Bancos'])));
+  linha('Custos total', dataPerMonth.map(x=>csvNumero(x.custosTotal)));
+  rows.push([]);
+  linha('Lucro líquido', dataPerMonth.map(x=>csvNumero(x.d.lucroLiquido)));
+  linha('ROI', dataPerMonth.map(x=>isFinite(x.d.roi) ? csvNumero(x.d.roi*100,1)+'%' : ''));
+  linha('ROAS', dataPerMonth.map(x=>isFinite(x.d.roas) ? csvNumero(x.d.roas)+'x' : ''));
+  linha('Média diária Ads no mês', dataPerMonth.map(x=>csvNumero(x.d.mediaDiariaAds)));
+  linha('Margem/Gasto', dataPerMonth.map(x=>isFinite(x.d.margemGasto) ? csvNumero(x.d.margemGasto)+'x' : ''));
+  linha('ROAS Caixa', dataPerMonth.map(x=>isFinite(x.d.roasCaixa) ? csvNumero(x.d.roasCaixa)+'x' : ''));
+
+  const nomeArquivo = `DRE_${loja}_${MESES_ABREV[months[0].m]}${months[0].y}_a_${MESES_ABREV[months[2].m]}${months[2].y}.csv`;
+  downloadCSV(nomeArquivo, rows);
+}
+function exportarDespesasCSV(){
+  const filtroMes = document.getElementById('filtroMes').value;
+  const filtroCat = document.getElementById('filtroCategoria').value;
+  let list = [...dre.expenses];
+  if(filtroMes){ list = list.filter(e=>{ const d=expenseDate(e); return monthKey(d.getFullYear(),d.getMonth())===filtroMes; }); }
+  if(filtroCat){ list = list.filter(e=>e.categoria===filtroCat); }
+  list.sort((a,b)=> a.data.localeCompare(b.data));
+
+  const rows = [['Data','Categoria','Descrição','Valor','Considerar','Recorrente']];
+  list.forEach(e=>{
+    const [y,m,dd] = e.data.split('-');
+    rows.push([
+      `${dd}/${m}/${y}`,
+      e.categoria,
+      e.descricao || '',
+      csvNumero(e.valor),
+      isConsiderado(e) ? 'Sim' : 'Não',
+      e.serieId ? 'Sim' : 'Não'
+    ]);
+  });
+  const sufixoMes = filtroMes ? `_${filtroMes}` : '_todos';
+  const sufixoCat = filtroCat ? `_${filtroCat.replace(/\s+/g,'')}` : '';
+  downloadCSV(`Despesas_${loja}${sufixoMes}${sufixoCat}.csv`, rows);
+}
+
 if(typeof Chart !== 'undefined'){
   Chart.register({
     id: 'valueLabelPlugin',
@@ -1832,6 +1923,7 @@ document.getElementById('mesHoje').addEventListener('click', ()=>{ viewDate = ne
 document.getElementById('dre3Ant').addEventListener('click', ()=>{ dre3AnchorDate = new Date(dre3AnchorDate.getFullYear(), dre3AnchorDate.getMonth()-1, 1); renderDre3Meses(); });
 document.getElementById('dre3Prox').addEventListener('click', ()=>{ dre3AnchorDate = new Date(dre3AnchorDate.getFullYear(), dre3AnchorDate.getMonth()+1, 1); renderDre3Meses(); });
 document.getElementById('dre3Hoje').addEventListener('click', ()=>{ dre3AnchorDate = new Date(today.getFullYear(), today.getMonth(), 1); renderDre3Meses(); });
+document.getElementById('btnExportarDre3').addEventListener('click', exportarDre3CSV);
 bindManualInput('inVendasRealizadas','vendasRealizadas');
 bindManualInput('inItensVendidos','itensVendidos');
 bindManualInput('inFaturamento','faturamento');
@@ -1914,6 +2006,7 @@ document.getElementById('despCancelarEdicao').addEventListener('click', resetDes
 
 document.getElementById('filtroMes').addEventListener('change', renderDespesasList);
 document.getElementById('filtroCategoria').addEventListener('change', renderDespesasList);
+document.getElementById('btnExportarDespesas').addEventListener('click', exportarDespesasCSV);
 
 /* ---------------- events: caixa ---------------- */
 function resetEntradaForm(){
