@@ -8,5 +8,8 @@
   },
   "kv_namespaces": [
     { "binding": "DRE_KV", "id": "ec622141d54c4f1fa43b67a25667afd6" }
-  ]
+  ],
+  "triggers": {
+    "crons": ["0 6 * * *"]
+  }
 }
