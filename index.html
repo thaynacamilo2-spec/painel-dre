@@ -542,6 +542,10 @@ table.list tr:last-child td{border-bottom:none;}
                 <label>Taxa Zoop (R$) — deixe em branco pra continuar somando da aba Despesas</label>
                 <input type="number" step="0.01" min="0" id="inTaxaZoop">
               </div>
+              <div class="dados-tile" style="grid-column:span 2;">
+                <label>Juros de Antecipação (R$) <span class="hint">custo de adiantar recebíveis, separado da Taxa Zoop</span> — deixe em branco pra continuar somando da aba Despesas</label>
+                <input type="number" step="0.01" min="0" id="inJurosAntecipacao">
+              </div>
             </div>
           </div>
         </div>
@@ -1012,15 +1016,15 @@ if (!window.fetchOrdersReservaInk) {
 
 function runPainelApp(){
 
-const DEFAULT_CATEGORIES = ['Facebook','Marketing','Taxa Zoop','Mensalidade INK','Canva','TikTok','Google Ads',
+const DEFAULT_CATEGORIES = ['Facebook','Marketing','Taxa Zoop','Juros de Antecipação','Mensalidade INK','Canva','TikTok','Google Ads',
   'Vivo','Contabilidade','Santander','MEI','Laura ADM','Troca','Ink Pilot','Meta Verified','Brevo','Kittl','Cora','Vendas','Seguidores'];
 
 const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-const GRUPOS_DRE3 = ['Facebook','Marketing','Taxa Zoop','Mensalidade INK','Contabilidade','Outros','Assinaturas','Bancos'];
+const GRUPOS_DRE3 = ['Facebook','Marketing','Taxa Zoop','Juros de Antecipação','Mensalidade INK','Contabilidade','Outros','Assinaturas','Bancos'];
 const GRUPO_PADRAO_POR_CATEGORIA = {
-  'Facebook':'Facebook', 'Marketing':'Marketing', 'Taxa Zoop':'Taxa Zoop', 'Mensalidade INK':'Mensalidade INK', 'Contabilidade':'Contabilidade',
+  'Facebook':'Facebook', 'Marketing':'Marketing', 'Taxa Zoop':'Taxa Zoop', 'Juros de Antecipação':'Juros de Antecipação', 'Mensalidade INK':'Mensalidade INK', 'Contabilidade':'Contabilidade',
   'Canva':'Assinaturas', 'Kittl':'Assinaturas', 'Ink Pilot':'Assinaturas', 'Meta Verified':'Assinaturas', 'Brevo':'Assinaturas',
   'Santander':'Bancos', 'Cora':'Bancos'
 };
@@ -1057,7 +1061,7 @@ function getMetaROAS(y,m){
 }
 function setMetaROAS(y,m,value){
   const key = monthKey(y,m);
-  if(!dre.monthlyManual[key]) dre.monthlyManual[key] = { vendasRealizadas:0, itensVendidos:0, faturamento:0, lucroBruto:0, facebookAdsDash:0, taxaZoop:null };
+  if(!dre.monthlyManual[key]) dre.monthlyManual[key] = { vendasRealizadas:0, itensVendidos:0, faturamento:0, lucroBruto:0, facebookAdsDash:0, taxaZoop:null, jurosAntecipacao:null };
   dre.monthlyManual[key].metaROAS = value;
 }
 
@@ -1153,6 +1157,7 @@ function exportarDre3CSV(){
   linha('Facebook', dataPerMonth.map(x=>csvNumero(x.totals['Facebook'])));
   linha('Marketing', dataPerMonth.map(x=>csvNumero(x.totals['Marketing'])));
   linha('Taxa Zoop', dataPerMonth.map(x=>csvNumero(x.totals['Taxa Zoop'])));
+  linha('Juros de Antecipação', dataPerMonth.map(x=>csvNumero(x.totals['Juros de Antecipação'])));
   linha('Mensalidade INK', dataPerMonth.map(x=>csvNumero(x.totals['Mensalidade INK'])));
   linha('Contabilidade', dataPerMonth.map(x=>csvNumero(x.totals['Contabilidade'])));
   linha('Outros', dataPerMonth.map(x=>csvNumero(x.totals['Outros'])));
@@ -1245,6 +1250,7 @@ async function loadStore(){
     if(!dre.categories || !dre.categories.length) dre.categories = defaultCategoryObjects();
     if(typeof dre.categories[0] === 'string') dre.categories = dre.categories.map(nome=>({nome, entraDRE:true}));
     dre.categories.forEach(c=>{ if(!c.grupo) c.grupo = defaultGrupoForCategoria(c.nome); });
+    if(!dre.categories.some(c=>c.nome==='Juros de Antecipação')) dre.categories.push({nome:'Juros de Antecipação', entraDRE:true, grupo:'Juros de Antecipação'});
   }catch(e){ dre = { categories: defaultCategoryObjects(), expenses: [], monthlyManual: {} }; }
   try{
     const r2 = await window.storage.get(`caixa_data_${loja}`);
@@ -1285,11 +1291,11 @@ function totalCustos(y,m){
 }
 function getManual(y,m){
   const key = monthKey(y,m);
-  return dre.monthlyManual[key] || { vendasRealizadas:0, itensVendidos:0, faturamento:0, lucroBruto:0, facebookAdsDash:0, taxaZoop:null };
+  return dre.monthlyManual[key] || { vendasRealizadas:0, itensVendidos:0, faturamento:0, lucroBruto:0, facebookAdsDash:0, taxaZoop:null, jurosAntecipacao:null };
 }
 function setManual(y,m,field,value){
   const key = monthKey(y,m);
-  if(!dre.monthlyManual[key]) dre.monthlyManual[key] = { vendasRealizadas:0, itensVendidos:0, faturamento:0, lucroBruto:0, facebookAdsDash:0, taxaZoop:null };
+  if(!dre.monthlyManual[key]) dre.monthlyManual[key] = { vendasRealizadas:0, itensVendidos:0, faturamento:0, lucroBruto:0, facebookAdsDash:0, taxaZoop:null, jurosAntecipacao:null };
   dre.monthlyManual[key][field] = value;
 }
 
@@ -1297,12 +1303,18 @@ function getTaxaZoopManual(y,m){
   const manual = getManual(y,m);
   return (manual.taxaZoop !== null && manual.taxaZoop !== undefined && manual.taxaZoop !== '') ? Number(manual.taxaZoop) : null;
 }
+function getJurosAntecipacaoManual(y,m){
+  const manual = getManual(y,m);
+  return (manual.jurosAntecipacao !== null && manual.jurosAntecipacao !== undefined && manual.jurosAntecipacao !== '') ? Number(manual.jurosAntecipacao) : null;
+}
 
 function computeDRE(y,m){
   const manual = getManual(y,m);
   const byCat = sumByCategory(y,m);
   const taxaZoopManual = getTaxaZoopManual(y,m);
   if(taxaZoopManual !== null){ byCat['Taxa Zoop'] = taxaZoopManual; }
+  const jurosAntecipacaoManual = getJurosAntecipacaoManual(y,m);
+  if(jurosAntecipacaoManual !== null){ byCat['Juros de Antecipação'] = jurosAntecipacaoManual; }
   const catsDRE = new Set(dre.categories.filter(c=>c.entraDRE).map(c=>c.nome));
   const custos = Object.entries(byCat).filter(([nome])=>catsDRE.has(nome)).reduce((a,[,v])=>a+v,0);
   const totalTodasCategorias = Object.values(byCat).reduce((a,b)=>a+b,0);
@@ -1367,6 +1379,7 @@ function renderDre3Meses(){
     { label:'Facebook', get:(x)=>x.totals['Facebook'] },
     { label:'Marketing', get:(x)=>x.totals['Marketing'] },
     { label:'Taxa Zoop', get:(x)=>x.totals['Taxa Zoop'] },
+    { label:'Juros de Antecipação', get:(x)=>x.totals['Juros de Antecipação'] },
     { label:'Mensalidade INK', get:(x)=>x.totals['Mensalidade INK'] },
     { label:'Contabilidade', get:(x)=>x.totals['Contabilidade'] },
     { label:'Outros', get:(x)=>x.totals['Outros'] },
@@ -1567,6 +1580,7 @@ function renderPainel(){
   document.getElementById('inLucroBruto').value = d.manual.lucroBruto || '';
   document.getElementById('inFacebookAdsDash').value = d.manual.facebookAdsDash || '';
   document.getElementById('inTaxaZoop').value = (d.manual.taxaZoop !== null && d.manual.taxaZoop !== undefined) ? d.manual.taxaZoop : '';
+  document.getElementById('inJurosAntecipacao').value = (d.manual.jurosAntecipacao !== null && d.manual.jurosAntecipacao !== undefined) ? d.manual.jurosAntecipacao : '';
 
   const grid = document.getElementById('advancedGrid');
   grid.innerHTML = `
@@ -1758,12 +1772,24 @@ function renderCaixa(){
     })
     .filter(Boolean)
     .filter(e=>isConsiderado(e));
+  const jurosAntecipacaoVirtuais = getAllMonthsRange()
+    .filter(mo=> !abreEmKey || monthKey(mo.y,mo.m) >= abreEmKey)
+    .map(mo=>{
+      const valor = getJurosAntecipacaoManual(mo.y, mo.m);
+      if(valor === null) return null;
+      const lastDay = new Date(mo.y, mo.m+1, 0).getDate();
+      return { id:`jurosantecipacao-${monthKey(mo.y,mo.m)}`, data:`${mo.y}-${pad(mo.m+1)}-${pad(lastDay)}`, tipo:'Despesa', descricao:'Juros de Antecipação (preenchido manualmente no mês)', valor, valorNeg:true };
+    })
+    .filter(Boolean)
+    .filter(e=>isConsiderado(e));
   const allMovs = [
     ...caixa.entradas.filter(e=>afterOpening(e.data)).map(e=>({...e, tipo:'Entrada', descricao: e.categoria ? (e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria) : (e.descricao||'')})),
     ...caixa.retiradas.filter(e=>afterOpening(e.data)).map(e=>({...e, tipo:'Retirada'})),
-    ...dre.expenses.filter(e=>e.categoria!=='Taxa Zoop' && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
+    ...dre.expenses.filter(e=>e.categoria!=='Taxa Zoop' && e.categoria!=='Juros de Antecipação' && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
     ...dre.expenses.filter(e=>e.categoria==='Taxa Zoop' && getTaxaZoopManual((new Date(e.data+'T00:00:00')).getFullYear(), (new Date(e.data+'T00:00:00')).getMonth())===null && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
-    ...taxaZoopVirtuais
+    ...dre.expenses.filter(e=>e.categoria==='Juros de Antecipação' && getJurosAntecipacaoManual((new Date(e.data+'T00:00:00')).getFullYear(), (new Date(e.data+'T00:00:00')).getMonth())===null && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
+    ...taxaZoopVirtuais,
+    ...jurosAntecipacaoVirtuais
   ].sort((a,b)=> b.data.localeCompare(a.data));
 
   const filtroMesSel = document.getElementById('caixaFiltroMes');
@@ -2421,6 +2447,7 @@ bindManualInput('inFaturamento','faturamento');
 bindManualInput('inLucroBruto','lucroBruto');
 bindManualInput('inFacebookAdsDash','facebookAdsDash');
 bindManualInputNullable('inTaxaZoop','taxaZoop');
+bindManualInputNullable('inJurosAntecipacao','jurosAntecipacao');
 
 document.getElementById('btnSyncReservaInk').addEventListener('click', async ()=>{
   const statusEl = document.getElementById('syncReservaInkStatus');
@@ -2441,7 +2468,7 @@ document.getElementById('btnSyncReservaInk').addEventListener('click', async ()=
       statusEl.textContent = `Erro: ${data.error || res.status}`;
     } else {
       statusEl.style.color = 'var(--positive)';
-      statusEl.textContent = `Atualizado: ${data.vendasRealizadas} vendas, ${data.itensVendidos} itens, ${fmtBRL(data.faturamento)} faturamento, ${data.novasEntradasCaixa} nova(s) entrada(s) no caixa.`;
+      statusEl.textContent = `Atualizado: ${data.vendasRealizadas} vendas, ${data.itensVendidos} itens, ${fmtBRL(data.faturamento)} faturamento, ${fmtBRL(data.jurosAntecipacao||0)} juros de antecipação, ${data.novasEntradasCaixa} nova(s) entrada(s) no caixa.`;
       await loadStore();
       renderAll();
     }
