@@ -463,7 +463,10 @@ table.list tr:last-child td{border-bottom:none;}
           <div class="card" id="despesasLedger"></div>
         </div>
         <div>
-          <div class="section-title">Dados do mês <span class="hint">dashboard Reserva Ink</span></div>
+          <div class="section-title">Dados do mês <span class="hint">dashboard Reserva Ink</span>
+            <button class="btn secondary" id="btnSyncReservaInk" style="font-size:12px; padding:6px 12px;">Atualizar via Reserva Ink</button>
+          </div>
+          <div id="syncReservaInkStatus" style="display:none; font-size:12px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;"></div>
           <div class="card">
             <div class="dados-mes-grid">
               <div class="dados-tile">
@@ -1931,6 +1934,37 @@ bindManualInput('inLucroBruto','lucroBruto');
 bindManualInput('inFacebookAdsDash','facebookAdsDash');
 bindManualInputNullable('inTaxaZoop','taxaZoop');
 
+document.getElementById('btnSyncReservaInk').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('syncReservaInkStatus');
+  const btn = document.getElementById('btnSyncReservaInk');
+  const accessKey = localStorage.getItem('painelDreAccessKey') || '';
+  const y = viewDate.getFullYear(), m = viewDate.getMonth();
+  const monthKeyStr = `${y}-${pad(m+1)}`;
+  btn.disabled = true;
+  btn.textContent = 'Atualizando...';
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = 'Buscando dados na Reserva Ink...';
+  try{
+    const res = await fetch(`/api/reserva-ink/sync?loja=${loja}&month=${monthKeyStr}&access=${encodeURIComponent(accessKey)}`);
+    const data = await res.json();
+    if(!res.ok || !data.ok){
+      statusEl.style.color = 'var(--negative)';
+      statusEl.textContent = `Erro: ${data.error || res.status}`;
+    } else {
+      statusEl.style.color = 'var(--positive)';
+      statusEl.textContent = `Atualizado: ${data.vendasRealizadas} vendas, ${data.itensVendidos} itens, ${fmtBRL(data.faturamento)} faturamento, ${data.novasEntradasCaixa} nova(s) entrada(s) no caixa.`;
+      await loadStore();
+      renderAll();
+    }
+  }catch(e){
+    statusEl.style.color = 'var(--negative)';
+    statusEl.textContent = `Não consegui conectar (${e.message}) — esse botão só funciona no app publicado.`;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Atualizar via Reserva Ink';
+});
+
 /* ---------------- events: despesas ---------------- */
 document.getElementById('despCategoria').addEventListener('change', (e)=>{
   document.getElementById('newcatBox').style.display = e.target.value==='__nova__' ? 'flex' : 'none';
@@ -2187,7 +2221,7 @@ document.getElementById('btnImportar').addEventListener('click', async ()=>{
 
 }
 
-/* ---------------- acesso + storage na nuvem (Cloudflare Pages Functions + KV) ---------------- */
+/* ---------------- acesso + storage na nuvem (Cloudflare Worker + KV) ---------------- */
 (function(){
   const params = new URLSearchParams(location.search);
   const urlKey = params.get('key');
