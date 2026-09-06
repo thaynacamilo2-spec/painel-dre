@@ -965,6 +965,16 @@ if (!window.fetchOrdersReservaInk) {
         const cupom = pick(CUPONS);
         const promoValue = cupom ? totalValue*0.05 : 0;
         const hour = Math.floor(rand()*22);
+        // Simula uma pequena fatia de pedidos que não são venda de verdade
+        // (reembolso, expiração, não autorizado, troca) — só pra mostrar que
+        // o filtro automático de Vendas já exclui esses casos.
+        const sorte = rand();
+        const isExchange = sorte > 0.965;
+        const paymentStatus = isExchange ? 'paid'
+          : sorte > 0.95 ? 'not_authorized'
+          : sorte > 0.935 ? 'expired'
+          : sorte > 0.92 ? 'refunded'
+          : 'paid';
         orders.push({
           id: orderId++,
           created_at: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), hour, Math.floor(rand()*60))).toISOString(),
@@ -972,6 +982,8 @@ if (!window.fetchOrdersReservaInk) {
           kickback_value: kickback.toFixed(2),
           promotion_code: cupom,
           promotion_value: promoValue.toFixed(2),
+          payment_status: paymentStatus,
+          is_exchange: isExchange,
           buyer: { first_name: pick(NOMES).split(' ')[0], last_name: pick(NOMES).split(' ')[1]||'' },
           items
         });
@@ -2106,7 +2118,18 @@ function monthRangeStr(y,m){
 }
 function prevMonthYM(y,m){ return m===0 ? [y-1,11] : [y,m-1]; }
 
+/* Pedidos que não representam uma venda de verdade (reembolsado, expirado,
+   pagamento não autorizado ou pedido de troca) não entram nos filtros
+   automáticos de Vendas — nem na contagem, nem no faturamento/lucro/ranking. */
+const STATUS_EXCLUIDOS_VENDAS = ['refunded','refund_requested','expired','not_authorized'];
+function pedidoContaComoVenda(o){
+  if(o.is_exchange) return false;
+  const status = String(o.payment_status || o.order_status || '').toLowerCase();
+  return !STATUS_EXCLUIDOS_VENDAS.includes(status);
+}
+
 function aggregateVendas(orders){
+  orders = (orders||[]).filter(pedidoContaComoVenda);
   const vendas = orders.length;
   let itensVendidos=0, faturamento=0, lucro=0, descontoCupom=0;
   const porDiaMap={}, porDiaSemanaMap={}, porTamanhoMap={}, porModeloMap={}, porCorMap={}, cuponsMap={}, estampasMap={}, compradoresMap={};
