@@ -121,6 +121,15 @@ nav.tabs button:hover{background:rgba(255,255,255,.06);}
 nav.tabs button.active{background:rgba(255,255,255,.1); color:#fff; font-weight:600;}
 nav.tabs .dot{width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55;}
 nav.tabs button.active .dot{background:var(--accent); opacity:1;}
+nav.tabs .nav-group-label{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#7c8494;
+  padding:14px 12px 4px;
+}
+nav.tabs .nav-group-label:first-child{padding-top:2px;}
 
 #sidebar .foot{
   margin-top:auto;
@@ -235,6 +244,19 @@ nav.tabs button.active .dot{background:var(--accent); opacity:1;}
   justify-content:space-between;
 }
 .section-title .hint{font-family:'Inter',sans-serif; font-weight:400; font-size:12.5px; color:var(--muted);}
+
+.periodo-filter{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:22px;}
+.periodo-filter .field-row{margin-bottom:0; flex-direction:row; align-items:center; gap:8px;}
+.periodo-filter .field-row label{white-space:nowrap;}
+.periodo-filter input[type="date"]{padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-family:'Inter',sans-serif; font-size:13.5px;}
+.periodo-filter .sep{color:var(--muted); font-size:13px;}
+
+.kpi-grid{display:grid; grid-template-columns:repeat(4, minmax(150px,1fr)); gap:14px; margin-bottom:26px;}
+.kpi-tile{position:relative; background:#fff; border:1px solid var(--line-soft); border-radius:12px; padding:16px 18px;}
+.kpi-tile .label{font-size:12.5px; color:var(--muted); margin-bottom:6px;}
+.kpi-tile .value{font-family:'Fraunces',serif; font-size:22px; font-weight:600;}
+.kpi-tile .trend-badge{position:absolute; top:14px; right:14px;}
+@media (max-width:900px){ .kpi-grid{grid-template-columns:repeat(2, 1fr);} }
 
 .card{
   background:var(--card);
@@ -378,14 +400,34 @@ table.list tr:last-child td{border-bottom:none;}
 .newcat-inline{display:flex; gap:8px; margin-top:8px;}
 .newcat-inline input{flex:1;}
 
+#navToggle{display:none;}
+
 @media (max-width:840px){
   #app{flex-direction:column;}
-  #sidebar{width:100%; flex-direction:row; align-items:center; padding:16px 20px; gap:20px; overflow-x:auto;}
-  #sidebar .brand-sub{display:none;}
-  #sidebar .foot{display:none;}
-  .loja-switch{margin-bottom:0;}
-  nav.tabs{flex-direction:row;}
-  #main{padding:24px 20px;}
+  #navToggle{
+    display:flex; align-items:center; justify-content:center;
+    position:fixed; top:14px; left:14px; z-index:60;
+    width:42px; height:42px; border-radius:10px;
+    background:var(--ink); color:#EDE6D3; border:none; cursor:pointer;
+    font-size:19px; line-height:1; box-shadow:0 2px 12px rgba(0,0,0,.28);
+  }
+  #sidebarBackdrop{display:none;}
+  #sidebarBackdrop.show{
+    display:block; position:fixed; inset:0;
+    background:rgba(20,24,36,.45); z-index:55;
+  }
+  #sidebar{
+    position:fixed; top:0; left:0; height:100vh; width:230px;
+    flex-direction:column; align-items:stretch;
+    padding:28px 20px;
+    transform:translateX(-100%);
+    transition:transform .22s ease;
+    z-index:58;
+    overflow-y:auto;
+  }
+  #sidebar.open{transform:translateX(0);}
+  nav.tabs{flex-direction:column;}
+  #main{padding:70px 20px 24px;}
   .hero-row{gap:20px; padding:20px;}
   .hero-main{padding-right:20px;}
 }
@@ -393,6 +435,8 @@ table.list tr:last-child td{border-bottom:none;}
 </head>
 <body>
 
+<button id="navToggle" aria-label="Abrir menu">☰</button>
+<div id="sidebarBackdrop"></div>
 <div id="app">
   <div id="sidebar">
     <div class="brand">Painel DRE</div>
@@ -402,12 +446,17 @@ table.list tr:last-child td{border-bottom:none;}
       <button data-loja="petnip">Petnip</button>
     </div>
     <nav class="tabs">
+      <div class="nav-group-label">Finanças</div>
       <button data-page="painel" class="active"><span class="dot"></span>Painel do mês</button>
       <button data-page="despesas"><span class="dot"></span>Despesas</button>
       <button data-page="caixa"><span class="dot"></span>Caixa</button>
       <button data-page="graficos"><span class="dot"></span>Dashboard</button>
       <button data-page="dre3"><span class="dot"></span>DRE</button>
       <button data-page="categorias"><span class="dot"></span>Categorias</button>
+
+      <div class="nav-group-label">Vendas</div>
+      <button data-page="vendas-dia"><span class="dot"></span>Vendas por dia</button>
+      <button data-page="vendas-geral"><span class="dot"></span>Visão geral</button>
     </nav>
     <div class="foot">Os dados ficam salvos neste artifact, por loja, e continuam aqui na próxima vez que você abrir.</div>
   </div>
@@ -771,12 +820,184 @@ table.list tr:last-child td{border-bottom:none;}
       </div>
     </div>
 
+    <!-- VENDAS POR DIA -->
+    <div class="page" id="page-vendas-dia">
+      <h2 class="serif" style="margin-bottom:6px;">Vendas por dia</h2>
+      <p style="color:var(--muted); font-size:13.5px; margin-top:0; margin-bottom:18px;">Movimento diário e ranking de produtos mais vendidos, vindo da Reserva Ink.</p>
+      <div style="background:#FFF4E0; border:1px solid #E8C989; color:#7A5A12; border-radius:8px; padding:10px 14px; font-size:12.5px; margin-bottom:18px;">⚠ <strong>Dados simulados.</strong> Essa aba ainda não está ligada na Reserva Ink de verdade — os números aqui são inventados só pra você avaliar o layout. Vão sumir assim que conectarmos a API de verdade.</div>
+
+      <div class="periodo-filter">
+        <div class="field-row"><label>De</label><input type="date" id="vdDataIni"></div>
+        <span class="sep">até</span>
+        <div class="field-row"><label></label><input type="date" id="vdDataFim"></div>
+        <button class="btn" id="vdAplicar">Aplicar</button>
+        <button class="btn secondary" id="vdLimpar">Limpar</button>
+      </div>
+
+      <div id="vdStatus" style="font-size:13px; color:var(--muted); margin-bottom:14px;"></div>
+
+      <div class="kpi-grid" id="vdKpis" style="grid-template-columns:repeat(4,minmax(150px,1fr));"></div>
+
+      <div class="section-title">Movimento por dia</div>
+      <div class="card" style="padding:0; max-height:420px; overflow:auto;">
+        <table class="list" id="vdTabelaDias">
+          <thead><tr><th>Data</th><th>Itens</th><th>Vendas</th><th>Lucro</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Produtos mais vendidos <span class="hint">por quantidade, no período</span></div>
+      <div class="card" style="padding:0; max-height:420px; overflow:auto;">
+        <table class="list" id="vdTabelaRanking">
+          <thead><tr><th>#</th><th>Produto / estampa</th><th>Quantidade</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VISÃO GERAL DE VENDAS -->
+    <div class="page" id="page-vendas-geral">
+      <h2 class="serif" style="margin-bottom:6px;">Visão geral de vendas</h2>
+      <p style="color:var(--muted); font-size:13.5px; margin-top:0; margin-bottom:18px;">Resumo do mês, comparado com o mês anterior — vindo da Reserva Ink.</p>
+      <div style="background:#FFF4E0; border:1px solid #E8C989; color:#7A5A12; border-radius:8px; padding:10px 14px; font-size:12.5px; margin-bottom:18px;">⚠ <strong>Dados simulados.</strong> Essa aba ainda não está ligada na Reserva Ink de verdade — os números aqui são inventados só pra você avaliar o layout. Vão sumir assim que conectarmos a API de verdade.</div>
+
+      <div class="filtro-botoes" style="margin-bottom:18px;">
+        <div class="btn-group" id="vgAnoButtons"></div>
+        <div class="btn-group" id="vgMesButtons"></div>
+      </div>
+
+      <div id="vgStatus" style="font-size:13px; color:var(--muted); margin-bottom:14px;"></div>
+
+      <div class="kpi-grid" id="vgKpis"></div>
+
+      <div class="section-title">Vendas / Itens no mês</div>
+      <div class="card"><div style="height:280px;"><canvas id="chartVgVendasItens"></canvas></div></div>
+
+      <div class="section-title">Detalhamento dos produtos</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="card"><div class="section-title" style="margin:0 0 10px;">Tamanhos</div><div style="height:260px;"><canvas id="chartVgTamanhos"></canvas></div></div>
+        <div class="card"><div class="section-title" style="margin:0 0 10px;">Modelos</div><div style="height:260px;"><canvas id="chartVgModelos"></canvas></div></div>
+        <div class="card"><div class="section-title" style="margin:0 0 10px;">Cores</div><div style="height:260px;"><canvas id="chartVgCores"></canvas></div></div>
+        <div class="card"><div class="section-title" style="margin:0 0 10px;">Melhores dias de venda</div><div style="height:260px;"><canvas id="chartVgDiaSemana"></canvas></div></div>
+      </div>
+
+      <div class="section-title">Cupons de vendas</div>
+      <div class="card" style="padding:0; max-height:340px; overflow:auto;">
+        <table class="list" id="vgTabelaCupons">
+          <thead><tr><th>Cupom</th><th>Vendas</th><th>Itens</th><th>Desconto</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Maiores compradores</div>
+      <div class="card" style="padding:0; max-height:340px; overflow:auto;">
+        <table class="list" id="vgTabelaCompradores">
+          <thead><tr><th>Nome</th><th>Vendas</th><th>Itens</th><th>Lucro</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+// Fallback só pra pré-visualização fora do Claude (ex: artifact publicado) — se o
+// ambiente já fornece window.storage nativamente, essa parte não faz nada.
+if (!window.storage) {
+  const _mem = {};
+  window.storage = {
+    get: async (key) => ({ value: Object.prototype.hasOwnProperty.call(_mem, key) ? _mem[key] : null }),
+    set: async (key, value) => { _mem[key] = value; return { ok: true }; }
+  };
+}
+// Fallback só pra pré-visualização: gera pedidos simulados no formato que o Worker
+// vai devolver (ver /api/reserva-ink/orders). No site publicado, o bloco de
+// bootstrap reatribui window.fetchOrdersReservaInk pra buscar de verdade.
+if (!window.fetchOrdersReservaInk) {
+  function _mulberry32(seed){
+    return function(){
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function _seedFromStr(s){
+    let h = 0;
+    for(let i=0;i<s.length;i++){ h = (Math.imul(31,h) + s.charCodeAt(i))|0; }
+    return h;
+  }
+  const ESTAMPAS = ['ódio eterno de uma mente com lembranças - gato','NEW calma como uma onça','estrela vermelha','Kavuka Corporativo','latina corajosa, pero cansada','flor de maracujá','saudade boa','viva a nostalgia','gato astronauta','coração de latina'];
+  const TAMANHOS = ['PP','P','M','G','GG','3G','4G'];
+  const MODELOS = ['Feminino','Cropped','Masculino','Unissex','Hoodie Slim','Infantil','Suéter Slim'];
+  const CORES = ['Marinho','Vermelho','Amarelo','Branca','Areia','Bordeaux','Cinza','Preta','Off White'];
+  const NOMES = ['Alex Barbosa','Karen Slindvain','Maira Lucas','Nicole Nascimento','Marilia Chaves','Luisa Daher','Lia Cortes','Pedro Wagner','Karina Gesteiro','Amanda Guimarães','Bruna Souza','Carlos Eduardo','Fernanda Lima','Rafael Torres'];
+  const CUPONS = [null,null,null,null,'VIVA5','VIVA5','VIVA5','LEVE5PAGUE4','VIVA15','DIADOSPAIS'];
+
+  window.fetchOrdersReservaInk = async function(lojaAtual, beginDateStr, endDateStr){
+    const rand = _mulberry32(_seedFromStr(lojaAtual + '|' + beginDateStr + '|' + endDateStr));
+    const pick = (arr) => arr[Math.floor(rand()*arr.length)];
+    const orders = [];
+    const begin = new Date(beginDateStr + 'T00:00:00Z');
+    const end = new Date(endDateStr + 'T00:00:00Z');
+    let orderId = 1000;
+    for(let d = new Date(begin); d <= end; d.setUTCDate(d.getUTCDate()+1)){
+      const nOrders = 2 + Math.floor(rand()*6);
+      for(let i=0; i<nOrders; i++){
+        const nItems = 1 + Math.floor(rand()*3);
+        const items = [];
+        let totalValue = 0, kickback = 0;
+        for(let j=0;j<nItems;j++){
+          const qtd = 1 + Math.floor(rand()*3);
+          const unit = 60 + rand()*70;
+          totalValue += unit*qtd;
+          kickback += unit*qtd*0.42;
+          items.push({
+            quantity: qtd,
+            unit_value: unit.toFixed(2),
+            product_v2: { name: pick(ESTAMPAS) },
+            product_variant: { size: pick(TAMANHOS), model: pick(MODELOS), color: pick(CORES) }
+          });
+        }
+        const cupom = pick(CUPONS);
+        const promoValue = cupom ? totalValue*0.05 : 0;
+        const hour = Math.floor(rand()*22);
+        orders.push({
+          id: orderId++,
+          created_at: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), hour, Math.floor(rand()*60))).toISOString(),
+          total_value: totalValue.toFixed(2),
+          kickback_value: kickback.toFixed(2),
+          promotion_code: cupom,
+          promotion_value: promoValue.toFixed(2),
+          buyer: { first_name: pick(NOMES).split(' ')[0], last_name: pick(NOMES).split(' ')[1]||'' },
+          items
+        });
+      }
+    }
+    return orders;
+  };
+}
+
+/* ---------------- menu mobile (recolhível, canto esquerdo) ---------------- */
+(function(){
+  const toggle = document.getElementById('navToggle');
+  const sidebarEl = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if(!toggle || !sidebarEl || !backdrop) return;
+  const closeMenu = () => { sidebarEl.classList.remove('open'); backdrop.classList.remove('show'); };
+  const openMenu = () => { sidebarEl.classList.add('open'); backdrop.classList.add('show'); };
+  toggle.addEventListener('click', () => {
+    sidebarEl.classList.contains('open') ? closeMenu() : openMenu();
+  });
+  backdrop.addEventListener('click', closeMenu);
+  sidebarEl.querySelectorAll('nav.tabs button, .loja-switch button').forEach(btn=>{
+    btn.addEventListener('click', closeMenu);
+  });
+})();
+
 function runPainelApp(){
 
 const DEFAULT_CATEGORIES = ['Facebook','Marketing','Taxa Zoop','Mensalidade INK','Canva','TikTok','Google Ads',
@@ -1230,6 +1451,10 @@ function getAllMonthsRange(){
 }
 function getYearsRange(){
   const years = new Set(getAllMonthsRange().map(mo=>mo.y));
+  // Sempre mostra pelo menos os últimos 3 anos + o atual, mesmo sem despesa
+  // lançada neles, pra dar pra navegar direto pelo botão (não só pela seta).
+  const curY = today.getFullYear();
+  for(let y = curY-3; y <= curY; y++) years.add(y);
   return Array.from(years).sort();
 }
 
@@ -1867,12 +2092,248 @@ function renderPizza(months){
   });
 }
 
+/* ---------------- Vendas (Reserva Ink ao vivo) ---------------- */
+async function fetchOrdersReservaInk(beginDateStr, endDateStr){
+  return window.fetchOrdersReservaInk(loja, beginDateStr, endDateStr);
+}
+
+function toISODate(d){ return d.toISOString().slice(0,10); }
+function fmtDataBR(iso){ const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+function monthRangeStr(y,m){
+  const begin = new Date(Date.UTC(y,m,1));
+  const end = new Date(Date.UTC(y,m+1,0));
+  return [toISODate(begin), toISODate(end)];
+}
+function prevMonthYM(y,m){ return m===0 ? [y-1,11] : [y,m-1]; }
+
+function aggregateVendas(orders){
+  const vendas = orders.length;
+  let itensVendidos=0, faturamento=0, lucro=0, descontoCupom=0;
+  const porDiaMap={}, porDiaSemanaMap={}, porTamanhoMap={}, porModeloMap={}, porCorMap={}, cuponsMap={}, estampasMap={}, compradoresMap={};
+  const DIAS_SEMANA = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+  for(const o of orders){
+    const tv = parseFloat(o.total_value)||0;
+    const kb = parseFloat(o.kickback_value)||0;
+    faturamento += tv;
+    lucro += kb;
+    const dataStr = (o.created_at||'').slice(0,10);
+    const dt = o.created_at ? new Date(o.created_at) : null;
+    let itensPedido = 0;
+    for(const it of (o.items||[])){
+      const qtd = Number(it.quantity)||0;
+      itensPedido += qtd;
+      itensVendidos += qtd;
+      const nomeProd = (it.product_v2 && it.product_v2.name) || 'Sem nome';
+      estampasMap[nomeProd] = (estampasMap[nomeProd]||0) + qtd;
+      const pv = it.product_variant || {};
+      const tam = pv.size || '—'; porTamanhoMap[tam] = (porTamanhoMap[tam]||0) + qtd;
+      const mod = pv.model || '—'; porModeloMap[mod] = (porModeloMap[mod]||0) + qtd;
+      const cor = pv.color || '—'; porCorMap[cor] = (porCorMap[cor]||0) + qtd;
+    }
+    if(dataStr){
+      if(!porDiaMap[dataStr]) porDiaMap[dataStr] = {itens:0, vendas:0, lucro:0};
+      porDiaMap[dataStr].itens += itensPedido;
+      porDiaMap[dataStr].vendas += 1;
+      porDiaMap[dataStr].lucro += kb;
+    }
+    if(dt && !isNaN(dt)){
+      const dow = dt.getUTCDay();
+      porDiaSemanaMap[dow] = (porDiaSemanaMap[dow]||0) + 1;
+    }
+    const promoCode = (o.promotion_code||'').trim();
+    const promoVal = parseFloat(o.promotion_value)||0;
+    if(promoVal>0) descontoCupom += promoVal;
+    if(promoCode){
+      if(!cuponsMap[promoCode]) cuponsMap[promoCode] = {vendas:0, itens:0, desconto:0};
+      cuponsMap[promoCode].vendas += 1;
+      cuponsMap[promoCode].itens += itensPedido;
+      cuponsMap[promoCode].desconto += promoVal;
+    }
+    const buyer = o.buyer || {};
+    const nomeComprador = [buyer.first_name, buyer.last_name].filter(Boolean).join(' ') || 'Não identificado';
+    if(!compradoresMap[nomeComprador]) compradoresMap[nomeComprador] = {vendas:0, itens:0, lucro:0};
+    compradoresMap[nomeComprador].vendas += 1;
+    compradoresMap[nomeComprador].itens += itensPedido;
+    compradoresMap[nomeComprador].lucro += kb;
+  }
+
+  const ticketMedio = vendas>0 ? faturamento/vendas : 0;
+  const itensPorVenda = vendas>0 ? itensVendidos/vendas : 0;
+  const lucroMedio = vendas>0 ? lucro/vendas : 0;
+  const porDia = Object.entries(porDiaMap).map(([data,v])=>({data, ...v})).sort((a,b)=> b.data.localeCompare(a.data));
+  const porDiaSemana = DIAS_SEMANA.map((label,i)=>({label, valor: porDiaSemanaMap[i]||0}));
+  const toEntriesSorted = (map)=> Object.entries(map).map(([label,valor])=>({label,valor})).sort((a,b)=>b.valor-a.valor);
+  const cupons = Object.entries(cuponsMap).map(([codigo,v])=>({codigo, ...v})).sort((a,b)=>b.vendas-a.vendas);
+  const melhoresEstampas = Object.entries(estampasMap).map(([nome,quantidade])=>({nome,quantidade})).sort((a,b)=>b.quantidade-a.quantidade);
+  const maioresCompradores = Object.entries(compradoresMap).map(([nome,v])=>({nome, ...v})).sort((a,b)=>b.lucro-a.lucro);
+
+  return {
+    totals: { vendas, itensVendidos, faturamento, lucro, ticketMedio, itensPorVenda, lucroMedio, descontoCupom },
+    porDia, porDiaSemana,
+    porTamanho: toEntriesSorted(porTamanhoMap),
+    porModelo: toEntriesSorted(porModeloMap),
+    porCor: toEntriesSorted(porCorMap),
+    cupons, melhoresEstampas, maioresCompradores
+  };
+}
+
+/* --- Vendas por dia --- */
+function defaultVdRange(){
+  const fim = new Date();
+  const ini = new Date(); ini.setDate(ini.getDate()-29);
+  return [toISODate(ini), toISODate(fim)];
+}
+async function renderVendasDia(){
+  const iniInput = document.getElementById('vdDataIni');
+  const fimInput = document.getElementById('vdDataFim');
+  if(!iniInput.value || !fimInput.value){
+    const [ini,fim] = defaultVdRange();
+    iniInput.value = ini; fimInput.value = fim;
+  }
+  const beginStr = iniInput.value, endStr = fimInput.value;
+  const statusEl = document.getElementById('vdStatus');
+  statusEl.textContent = 'Carregando…';
+  try{
+    const orders = await fetchOrdersReservaInk(beginStr, endStr);
+    const agg = aggregateVendas(orders);
+    statusEl.textContent = `${agg.totals.vendas} vendas entre ${fmtDataBR(beginStr)} e ${fmtDataBR(endStr)}`;
+    document.getElementById('vdKpis').innerHTML = `
+      <div class="kpi-tile"><div class="label">Vendas</div><div class="value">${agg.totals.vendas}</div></div>
+      <div class="kpi-tile"><div class="label">Itens vendidos</div><div class="value">${agg.totals.itensVendidos}</div></div>
+      <div class="kpi-tile"><div class="label">Faturamento</div><div class="value">${fmtBRLShort(agg.totals.faturamento)}</div></div>
+      <div class="kpi-tile"><div class="label">Lucro</div><div class="value">${fmtBRLShort(agg.totals.lucro)}</div></div>`;
+    const tbodyDias = document.querySelector('#vdTabelaDias tbody');
+    tbodyDias.innerHTML = agg.porDia.length===0
+      ? '<tr><td colspan="4" style="color:var(--muted);">Sem vendas no período.</td></tr>'
+      : agg.porDia.map(d=>`<tr><td>${fmtDataBR(d.data)}</td><td class="num">${d.itens}</td><td class="num">${d.vendas}</td><td class="num">${fmtBRL(d.lucro)}</td></tr>`).join('');
+    const tbodyRanking = document.querySelector('#vdTabelaRanking tbody');
+    tbodyRanking.innerHTML = agg.melhoresEstampas.length===0
+      ? '<tr><td colspan="3" style="color:var(--muted);">Sem vendas no período.</td></tr>'
+      : agg.melhoresEstampas.map((e,i)=>`<tr><td>${i+1}</td><td>${e.nome}</td><td class="num">${e.quantidade}</td></tr>`).join('');
+  }catch(e){
+    statusEl.textContent = 'Erro ao buscar dados da Reserva Ink: ' + e.message;
+  }
+}
+
+/* --- Visão geral de vendas (por mês) --- */
+let vgYear = new Date().getFullYear();
+let vgMonth = new Date().getMonth();
+const pieColorsVg = ['#6C97C2','#8FB3D9','#A8C6E0','#4F7BA6','#C4DCEF','#7FA8CC','#365D80','#9CC2E3','#527FA8','#B7D3EA','#3D6F97','#D6E7F5','#2C4159','#E9F1F9'];
+function destroyChart(id){ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
+
+// Independente do filtro de ano do Painel/DRE (que só olha os meses com despesa
+// lançada) — Vendas tem sua própria janela de anos, sempre os últimos 3.
+function getVendasYearsRange(){
+  const cur = new Date().getFullYear();
+  return [cur-2, cur-1, cur];
+}
+function renderVgFiltroBotoes(){
+  const anos = getVendasYearsRange();
+  const anoBox = document.getElementById('vgAnoButtons');
+  anoBox.innerHTML = anos.map(y=>`<button data-ano="${y}" class="${y===vgYear?'active':''}">${y}</button>`).join('');
+  anoBox.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ vgYear = parseInt(btn.dataset.ano); renderVendasGeral(); });
+  });
+  const mesBox = document.getElementById('vgMesButtons');
+  mesBox.innerHTML = MESES_ABREV.map((label,i)=>`<button data-mes="${i}" class="${i===vgMonth?'active':''}">${label}</button>`).join('');
+  mesBox.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ vgMonth = parseInt(btn.dataset.mes); renderVendasGeral(); });
+  });
+}
+
+async function renderVendasGeral(){
+  renderVgFiltroBotoes();
+  const statusEl = document.getElementById('vgStatus');
+  statusEl.textContent = 'Carregando…';
+  try{
+    const [begin,end] = monthRangeStr(vgYear, vgMonth);
+    const [py,pm] = prevMonthYM(vgYear, vgMonth);
+    const [pBegin,pEnd] = monthRangeStr(py,pm);
+    const [orders, ordersAnt] = await Promise.all([
+      fetchOrdersReservaInk(begin,end),
+      fetchOrdersReservaInk(pBegin,pEnd)
+    ]);
+    const agg = aggregateVendas(orders);
+    const aggAnt = aggregateVendas(ordersAnt);
+    statusEl.textContent = `${agg.totals.vendas} vendas em ${MESES_ABREV[vgMonth]}/${vgYear}`;
+
+    const tiles = [
+      ['Vendas', agg.totals.vendas, aggAnt.totals.vendas, v=>String(v)],
+      ['Ticket Médio', agg.totals.ticketMedio, aggAnt.totals.ticketMedio, fmtBRL],
+      ['Itens Vendidos', agg.totals.itensVendidos, aggAnt.totals.itensVendidos, v=>String(v)],
+      ['Itens por venda', agg.totals.itensPorVenda, aggAnt.totals.itensPorVenda, v=>v.toLocaleString('pt-BR',{maximumFractionDigits:2})],
+      ['Faturado', agg.totals.faturamento, aggAnt.totals.faturamento, fmtBRL],
+      ['Lucro', agg.totals.lucro, aggAnt.totals.lucro, fmtBRL],
+      ['Lucro Médio', agg.totals.lucroMedio, aggAnt.totals.lucroMedio, fmtBRL],
+      ['Desconto Cupom', agg.totals.descontoCupom, aggAnt.totals.descontoCupom, fmtBRL],
+    ];
+    document.getElementById('vgKpis').innerHTML = tiles.map(([label,val],i)=>`
+      <div class="kpi-tile">
+        <div class="trend-badge" id="vgTrend${i}"></div>
+        <div class="label">${label}</div>
+        <div class="value">${tiles[i][3](val)}</div>
+      </div>`).join('');
+    tiles.forEach((t,i)=> renderTrendBadge('vgTrend'+i, t[1], t[2]));
+
+    const diasOrdenados = [...agg.porDia].sort((a,b)=>a.data.localeCompare(b.data));
+    destroyChart('vgVendasItens');
+    chartInstances.vgVendasItens = new Chart(document.getElementById('chartVgVendasItens'), {
+      type:'line',
+      data:{ labels: diasOrdenados.map(d=>fmtDataBR(d.data)), datasets:[
+        {label:'Vendas', data: diasOrdenados.map(d=>d.vendas), borderColor:'#8B3A62', backgroundColor:'rgba(139,58,98,.12)', tension:.3, fill:true},
+        {label:'Itens', data: diasOrdenados.map(d=>d.itens), borderColor:'#6C3FA6', backgroundColor:'rgba(108,63,166,.12)', tension:.3, fill:true},
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} }
+    });
+    const pieOpts = { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} };
+    destroyChart('vgTamanhos');
+    chartInstances.vgTamanhos = new Chart(document.getElementById('chartVgTamanhos'), { type:'pie',
+      data:{ labels: agg.porTamanho.map(e=>e.label), datasets:[{data: agg.porTamanho.map(e=>e.valor), backgroundColor: agg.porTamanho.map((_,i)=>pieColorsVg[i%pieColorsVg.length])}]}, options:pieOpts });
+    destroyChart('vgModelos');
+    chartInstances.vgModelos = new Chart(document.getElementById('chartVgModelos'), { type:'pie',
+      data:{ labels: agg.porModelo.map(e=>e.label), datasets:[{data: agg.porModelo.map(e=>e.valor), backgroundColor: agg.porModelo.map((_,i)=>pieColorsVg[i%pieColorsVg.length])}]}, options:pieOpts });
+    destroyChart('vgCores');
+    chartInstances.vgCores = new Chart(document.getElementById('chartVgCores'), { type:'pie',
+      data:{ labels: agg.porCor.map(e=>e.label), datasets:[{data: agg.porCor.map(e=>e.valor), backgroundColor: agg.porCor.map((_,i)=>pieColorsVg[i%pieColorsVg.length])}]}, options:pieOpts });
+    destroyChart('vgDiaSemana');
+    chartInstances.vgDiaSemana = new Chart(document.getElementById('chartVgDiaSemana'), { type:'bar',
+      data:{ labels: agg.porDiaSemana.map(d=>d.label.slice(0,3)), datasets:[{data: agg.porDiaSemana.map(d=>d.valor), backgroundColor:'#B23A6B'}] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } });
+
+    const tbodyCupons = document.querySelector('#vgTabelaCupons tbody');
+    tbodyCupons.innerHTML = agg.cupons.length===0
+      ? '<tr><td colspan="4" style="color:var(--muted);">Nenhum cupom usado no período.</td></tr>'
+      : agg.cupons.map(c=>`<tr><td>${c.codigo}</td><td class="num">${c.vendas}</td><td class="num">${c.itens}</td><td class="num">${fmtBRL(c.desconto)}</td></tr>`).join('');
+    const tbodyCompradores = document.querySelector('#vgTabelaCompradores tbody');
+    tbodyCompradores.innerHTML = agg.maioresCompradores.length===0
+      ? '<tr><td colspan="4" style="color:var(--muted);">Sem compradores no período.</td></tr>'
+      : agg.maioresCompradores.slice(0,20).map(c=>`<tr><td>${c.nome}</td><td class="num">${c.vendas}</td><td class="num">${c.itens}</td><td class="num">${fmtBRL(c.lucro)}</td></tr>`).join('');
+  }catch(e){
+    statusEl.textContent = 'Erro ao buscar dados da Reserva Ink: ' + e.message;
+  }
+}
+
+document.getElementById('vdAplicar').addEventListener('click', renderVendasDia);
+document.getElementById('vdLimpar').addEventListener('click', ()=>{
+  const [ini,fim] = defaultVdRange();
+  document.getElementById('vdDataIni').value = ini;
+  document.getElementById('vdDataFim').value = fim;
+  renderVendasDia();
+});
+
 /* ---------------- render all ---------------- */
 function isGraficosActive(){
   return document.getElementById('page-graficos').classList.contains('active');
 }
 function isPainelActive(){
   return document.getElementById('page-painel').classList.contains('active');
+}
+function isVendasDiaActive(){
+  return document.getElementById('page-vendas-dia').classList.contains('active');
+}
+function isVendasGeralActive(){
+  return document.getElementById('page-vendas-geral').classList.contains('active');
 }
 function jumpToPainelMonth(y,m){
   viewDate = new Date(y,m,1);
@@ -1893,6 +2354,8 @@ function renderAll(){
   renderDre3Meses();
   renderCategorias();
   if(isGraficosActive()) renderGraficos();
+  if(isVendasDiaActive()) renderVendasDia();
+  if(isVendasGeralActive()) renderVendasGeral();
 }
 
 /* ---------------- events: sidebar nav ---------------- */
@@ -1904,6 +2367,8 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.getElementById('page-'+btn.dataset.page).classList.add('active');
     if(btn.dataset.page==='graficos') renderGraficos();
     if(btn.dataset.page==='painel') renderPainelCharts();
+    if(btn.dataset.page==='vendas-dia') renderVendasDia();
+    if(btn.dataset.page==='vendas-geral') renderVendasGeral();
   });
 });
 
