@@ -871,6 +871,14 @@ table.list tr:last-child td{border-bottom:none;}
 
       <div class="kpi-grid" id="vdKpis" style="grid-template-columns:repeat(4,minmax(150px,1fr));"></div>
 
+      <div class="section-title">Pedidos não computados <span class="hint">trocas, cancelados, expirados, aguardando pagamento, reembolsados e não autorizados — não entram nas vendas acima</span></div>
+      <div class="card" style="padding:0; margin-bottom:26px;">
+        <table class="list" id="vdTabelaNaoContabilizados">
+          <thead><tr><th>Categoria</th><th>Pedidos</th><th>Valor (R$)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
       <div class="section-title">Movimento por dia</div>
       <div class="card" style="padding:0; max-height:420px; overflow:auto;">
         <table class="list" id="vdTabelaDias">
@@ -901,6 +909,14 @@ table.list tr:last-child td{border-bottom:none;}
       <div id="vgStatus" style="font-size:13px; color:var(--muted); margin-bottom:14px;"></div>
 
       <div class="kpi-grid" id="vgKpis"></div>
+
+      <div class="section-title">Pedidos não computados <span class="hint">trocas, cancelados, expirados, aguardando pagamento, reembolsados e não autorizados — não entram no faturamento</span></div>
+      <div class="card" style="padding:0; margin-bottom:26px;">
+        <table class="list" id="vgTabelaNaoContabilizados">
+          <thead><tr><th>Categoria</th><th>Pedidos</th><th>Valor (R$)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
       <div class="section-title">Vendas / Itens no mês</div>
       <div class="card"><div style="height:280px;"><canvas id="chartVgVendasItens"></canvas></div></div>
@@ -2273,20 +2289,68 @@ function monthRangeStr(y,m){
 }
 function prevMonthYM(y,m){ return m===0 ? [y-1,11] : [y,m-1]; }
 
-/* Só conta como venda de verdade um pedido com pagamento efetivamente
-   confirmado (status "paid") que não seja pedido de troca — nem na
-   contagem, nem no faturamento/lucro/ranking. Isso é uma regra de
-   INCLUSÃO (exige "paid") em vez de uma lista de status pra excluir
-   (reembolsado/expirado/não autorizado/pendente/...): a Reserva Ink tem
-   vários status que não são venda, e uma lista de exclusão sempre corre o
-   risco de esquecer algum (ex: pedido "pendente", que não é reembolso nem
-   expiração mas também não é venda realizada). is_exchange continua
-   checado à parte por segurança, mesmo pedidos de troca não vindo com
-   payment_status "paid". */
+/* Pedidos que não representam uma venda de verdade (reembolsado, expirado,
+   pagamento não autorizado, pendente/aguardando pagamento ou pedido de
+   troca) não entram nos filtros automáticos de Vendas — nem na contagem,
+   nem no faturamento/lucro/ranking. Lista de EXCLUSÃO (em vez de exigir
+   status==="paid") de propósito: os pedidos aqui vêm direto da Reserva Ink
+   sem filtro nenhum do nosso lado, e o status de "pago" pode não ser
+   literalmente a string "paid" pra todo método de pagamento — uma lista de
+   exclusão erra pro lado seguro (só tira quem a gente tem certeza que não é
+   venda), em vez de arriscar zerar tudo se algum pedido pago vier com um
+   status que a gente não previu. */
+const STATUS_EXCLUIDOS_VENDAS = ['refunded','refund_requested','expired','not_authorized','pending','cancelled','canceled'];
 function pedidoContaComoVenda(o){
   if(o.is_exchange) return false;
   const status = String(o.payment_status || o.order_status || '').toLowerCase();
-  return status === 'paid';
+  return !STATUS_EXCLUIDOS_VENDAS.includes(status);
+}
+
+/* Classifica um pedido que NÃO conta como venda numa categoria pra exibir
+   na aba de Vendas (pra além de simplesmente sumir dos números). "outros"
+   pega qualquer status futuro que a Reserva Ink venha a usar e que ainda
+   não esteja mapeado aqui, sem quebrar a exibição. */
+const CATEGORIAS_NAO_VENDA = [
+  { key:'troca', label:'Trocas' },
+  { key:'reembolsado', label:'Reembolsados' },
+  { key:'expirado', label:'Expirados' },
+  { key:'nao_autorizado', label:'Não autorizados' },
+  { key:'pendente', label:'Aguardando pagamento' },
+  { key:'cancelado', label:'Cancelados' },
+  { key:'outros', label:'Outros' },
+];
+function categoriaNaoVenda(o){
+  if(o.is_exchange) return 'troca';
+  const status = String(o.payment_status || o.order_status || '').toLowerCase();
+  if(status==='refunded' || status==='refund_requested') return 'reembolsado';
+  if(status==='expired') return 'expirado';
+  if(status==='not_authorized') return 'nao_autorizado';
+  if(status==='pending') return 'pendente';
+  if(status==='cancelled' || status==='canceled') return 'cancelado';
+  if(!pedidoContaComoVenda(o)) return 'outros';
+  return null; // conta como venda normal
+}
+function resumoPedidosNaoContabilizados(orders){
+  const acc = {};
+  for(const o of (orders||[])){
+    const cat = categoriaNaoVenda(o);
+    if(!cat) continue;
+    if(!acc[cat]) acc[cat] = { count:0, valor:0 };
+    acc[cat].count += 1;
+    acc[cat].valor += parseFloat(o.total_value)||0;
+  }
+  return CATEGORIAS_NAO_VENDA
+    .map(c => ({ label:c.label, count:(acc[c.key]&&acc[c.key].count)||0, valor:(acc[c.key]&&acc[c.key].valor)||0 }))
+    .filter(r => r.count>0)
+    .sort((a,b)=> b.count-a.count);
+}
+function renderTabelaNaoContabilizados(tbodySelector, orders){
+  const rows = resumoPedidosNaoContabilizados(orders);
+  const tbody = document.querySelector(tbodySelector);
+  if(!tbody) return;
+  tbody.innerHTML = rows.length===0
+    ? '<tr><td colspan="3" style="color:var(--muted);">Nenhum pedido fora do padrão no período.</td></tr>'
+    : rows.map(r=>`<tr><td>${r.label}</td><td class="num">${r.count}</td><td class="num">${fmtBRL(r.valor)}</td></tr>`).join('');
 }
 
 function aggregateVendas(orders){
@@ -2381,6 +2445,7 @@ async function renderVendasDia(){
   try{
     const orders = await fetchOrdersReservaInk(beginStr, endStr);
     const agg = aggregateVendas(orders);
+    renderTabelaNaoContabilizados('#vdTabelaNaoContabilizados tbody', orders);
     statusEl.textContent = `${agg.totals.vendas} vendas entre ${fmtDataBR(beginStr)} e ${fmtDataBR(endStr)}`;
     document.getElementById('vdKpis').innerHTML = `
       <div class="kpi-tile"><div class="label">Vendas</div><div class="value">${agg.totals.vendas}</div></div>
@@ -2454,6 +2519,7 @@ async function renderVendasGeral(){
     ]);
     const agg = aggregateVendas(orders);
     const aggAnt = aggregateVendas(ordersAnt);
+    renderTabelaNaoContabilizados('#vgTabelaNaoContabilizados tbody', orders);
     statusEl.textContent = `${agg.totals.vendas} vendas em ${labelPeriodo}`;
 
     const tiles = [
