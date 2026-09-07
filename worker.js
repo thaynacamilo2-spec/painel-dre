@@ -60,22 +60,6 @@ const RESERVA_INK_BASE = 'https://api.reserva.ink';
 // a Petnip tambem passar a usar a Reserva Ink.
 const RESERVA_INK_LOJAS = ['vivashop'];
 
-// So conta como venda de verdade um pedido com pagamento efetivamente
-// confirmado (status "paid") que nao seja pedido de troca - mesma regra
-// usada nas abas de Vendas do painel (pedidoContaComoVenda no
-// painel-dre.html), duplicada aqui pra manter a sincronizacao automatica do
-// DRE consistente com o resto do painel. E uma regra de INCLUSAO (exige
-// "paid") em vez de lista de status pra excluir: a Reserva Ink tem varios
-// status que nao sao venda (reembolsado, expirado, nao autorizado,
-// pendente, ...) e uma lista de exclusao sempre corre o risco de esquecer
-// algum. is_exchange continua checado a parte por seguranca, mesmo pedidos
-// de troca nao vindo com payment_status "paid".
-function pedidoContaComoVenda(o) {
-  if (o.is_exchange) return false;
-  const status = String(o.payment_status || o.order_status || '').toLowerCase();
-  return status === 'paid';
-}
-
 // busca todas as paginas de um endpoint que declara total_pages (orders, withdraws)
 async function fetchAllPages(url, token, arrayField, maxPages = 50) {
   let page = 1;
@@ -131,14 +115,6 @@ async function fetchPrepaymentsForMonth(token, monthStart, monthEnd, maxPages = 
   return matched;
 }
 
-// Horario de Brasilia = UTC-3 o ano inteiro (Brasil nao tem mais horario de
-// verao desde 2019), entao o deslocamento e fixo - sem precisar de tabela de
-// fuso horario. monthStart/monthEnd abaixo sao os instantes UTC que
-// correspondem a meia-noite do dia 1 e ao ultimo instante do ultimo dia do
-// mes, ambos em horario de Brasilia (evita contar/perder pedidos feitos nas
-// primeiras/ultimas horas do mes por causa da diferenca de fuso).
-const BRT_OFFSET_HOURS = 3;
-
 function monthBounds(monthKey) {
   const [yStr, mStr] = monthKey.split('-');
   const y = parseInt(yStr, 10), m = parseInt(mStr, 10);
@@ -146,10 +122,8 @@ function monthBounds(monthKey) {
   return {
     beginDateStr: `${y}-${String(m).padStart(2, '0')}-01`,
     endDateStr: `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`,
-    // 00:00:00 do dia 1 em Brasilia = 03:00:00 UTC do dia 1
-    monthStart: new Date(Date.UTC(y, m - 1, 1, BRT_OFFSET_HOURS, 0, 0, 0)),
-    // 23:59:59.999 do ultimo dia em Brasilia = 02:59:59.999 UTC do dia 1 do mes seguinte
-    monthEnd: new Date(Date.UTC(y, m, 1, BRT_OFFSET_HOURS, 0, 0, 0) - 1)
+    monthStart: new Date(Date.UTC(y, m - 1, 1)),
+    monthEnd: new Date(Date.UTC(y, m - 1, lastDay, 23, 59, 59))
   };
 }
 
@@ -161,19 +135,21 @@ async function syncReservaInk(env, loja, monthKey) {
   const { beginDateStr, endDateStr, monthStart, monthEnd } = monthBounds(monthKey);
 
   // 1. pedidos pagos do mes -> vendas realizadas, itens vendidos, faturamento, lucro bruto
-  // Filtra payment_status=paid direto na API (como antes - mantem o numero
-  // de paginas buscadas baixo, importante pro Sincronizar historico que
-  // roda isso pra varios meses seguidos e pode esbarrar no limite de
-  // sub-requisicoes do Worker se buscar todo mundo sem filtro). Em cima
-  // disso ainda aplica pedidoContaComoVenda pra tirar pedidos de troca
-  // (is_exchange) que a API pode devolver com payment_status "paid" mesmo
-  // nao sendo uma venda de verdade.
+  // O filtro payment_status=paid na propria chamada a API (igual sempre foi)
+  // ja garante que so pedidos efetivamente pagos voltam - o que sozinho ja
+  // exclui cancelado/expirado/aguardando pagamento (pendente)/reembolsado/
+  // nao autorizado, sem precisar buscar pagina nenhuma a mais (mesmo volume
+  // de dados de sempre, sem risco de estourar limite de sub-requisicao). A
+  // unica excecao e pedido de troca (is_exchange), que pode voltar marcado
+  // como "paid" mesmo nao sendo uma venda de verdade - por isso o filtro
+  // extra abaixo, que so reaproveita os pedidos ja buscados (nenhuma
+  // requisicao a mais).
   const ordersUrl = new URL(`${RESERVA_INK_BASE}/v1/stores/orders`);
   ordersUrl.searchParams.set('begin_date', beginDateStr);
   ordersUrl.searchParams.set('end_date', endDateStr);
   ordersUrl.searchParams.set('payment_status', 'paid');
   const pedidosPagos = await fetchAllPages(ordersUrl, token, 'orders');
-  const orders = pedidosPagos.filter(pedidoContaComoVenda);
+  const orders = pedidosPagos.filter(o => !o.is_exchange);
 
   let itensVendidos = 0, faturamento = 0, lucroBruto = 0;
   for (const o of orders) {
@@ -366,5 +342,3 @@ export default {
     }
   }
 };
-
-
