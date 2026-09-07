@@ -2279,14 +2279,20 @@ function monthRangeStr(y,m){
 }
 function prevMonthYM(y,m){ return m===0 ? [y-1,11] : [y,m-1]; }
 
-/* Pedidos que não representam uma venda de verdade (reembolsado, expirado,
-   pagamento não autorizado ou pedido de troca) não entram nos filtros
-   automáticos de Vendas — nem na contagem, nem no faturamento/lucro/ranking. */
-const STATUS_EXCLUIDOS_VENDAS = ['refunded','refund_requested','expired','not_authorized'];
+/* Só conta como venda de verdade um pedido com pagamento efetivamente
+   confirmado (status "paid") que não seja pedido de troca — nem na
+   contagem, nem no faturamento/lucro/ranking. Isso é uma regra de
+   INCLUSÃO (exige "paid") em vez de uma lista de status pra excluir
+   (reembolsado/expirado/não autorizado/pendente/...): a Reserva Ink tem
+   vários status que não são venda, e uma lista de exclusão sempre corre o
+   risco de esquecer algum (ex: pedido "pendente", que não é reembolso nem
+   expiração mas também não é venda realizada). is_exchange continua
+   checado à parte por segurança, mesmo pedidos de troca não vindo com
+   payment_status "paid". */
 function pedidoContaComoVenda(o){
   if(o.is_exchange) return false;
   const status = String(o.payment_status || o.order_status || '').toLowerCase();
-  return !STATUS_EXCLUIDOS_VENDAS.includes(status);
+  return status === 'paid';
 }
 
 function aggregateVendas(orders){
