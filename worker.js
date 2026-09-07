@@ -160,18 +160,20 @@ async function syncReservaInk(env, loja, monthKey) {
 
   const { beginDateStr, endDateStr, monthStart, monthEnd } = monthBounds(monthKey);
 
-  // 1. pedidos do mes -> vendas realizadas, itens vendidos, faturamento, lucro bruto
-  // Antes isso filtrava so por payment_status=paid direto na API da Reserva
-  // Ink - o que nao exclui pedidos de troca (is_exchange), e depende da API
-  // atualizar o payment_status pra "refunded"/etc quando um pedido pago e
-  // reembolsado depois. Agora busca TODOS os status (igual as abas de
-  // Vendas) e aplica o mesmo filtro pedidoContaComoVenda, pra manter os
-  // numeros do DRE sempre consistentes com Vendas por dia / Visão geral.
+  // 1. pedidos pagos do mes -> vendas realizadas, itens vendidos, faturamento, lucro bruto
+  // Filtra payment_status=paid direto na API (como antes - mantem o numero
+  // de paginas buscadas baixo, importante pro Sincronizar historico que
+  // roda isso pra varios meses seguidos e pode esbarrar no limite de
+  // sub-requisicoes do Worker se buscar todo mundo sem filtro). Em cima
+  // disso ainda aplica pedidoContaComoVenda pra tirar pedidos de troca
+  // (is_exchange) que a API pode devolver com payment_status "paid" mesmo
+  // nao sendo uma venda de verdade.
   const ordersUrl = new URL(`${RESERVA_INK_BASE}/v1/stores/orders`);
   ordersUrl.searchParams.set('begin_date', beginDateStr);
   ordersUrl.searchParams.set('end_date', endDateStr);
-  const todosPedidos = await fetchAllPages(ordersUrl, token, 'orders');
-  const orders = todosPedidos.filter(pedidoContaComoVenda);
+  ordersUrl.searchParams.set('payment_status', 'paid');
+  const pedidosPagos = await fetchAllPages(ordersUrl, token, 'orders');
+  const orders = pedidosPagos.filter(pedidoContaComoVenda);
 
   let itensVendidos = 0, faturamento = 0, lucroBruto = 0;
   for (const o of orders) {
@@ -364,4 +366,5 @@ export default {
     }
   }
 };
+
 
