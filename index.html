@@ -523,12 +523,6 @@ table.list tr:last-child td{border-bottom:none;}
             <button class="btn secondary" id="btnSyncReservaInk" style="font-size:12px; padding:6px 12px;">Atualizar via Reserva Ink</button>
           </div>
           <div id="syncReservaInkStatus" style="display:none; font-size:12px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;"></div>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:10px 12px; background:var(--accent-soft); border-radius:8px;">
-            <span style="font-size:12px; color:var(--muted); white-space:nowrap;">Primeira vez usando? Traga o histórico:</span>
-            <input type="month" id="inSyncHistoricoDesde" style="font-size:12.5px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:'Archivo',sans-serif; background:var(--card);">
-            <button class="btn secondary" id="btnSyncHistorico" style="font-size:12px; padding:6px 12px;">Sincronizar até hoje</button>
-          </div>
-          <div id="syncHistoricoStatus" style="display:none; font-size:12px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;"></div>
           <div class="card">
             <div class="dados-mes-grid">
               <div class="dados-tile">
@@ -2643,48 +2637,6 @@ document.getElementById('btnSyncReservaInk').addEventListener('click', async ()=
   }
   btn.disabled = false;
   btn.textContent = 'Atualizar via Reserva Ink';
-});
-
-document.getElementById('btnSyncHistorico').addEventListener('click', async ()=>{
-  const desde = document.getElementById('inSyncHistoricoDesde').value; // "YYYY-MM"
-  if(!desde){ showToast('Escolhe o mês inicial pra trazer o histórico.'); return; }
-  const [dyStr, dmStr] = desde.split('-');
-  const dy = parseInt(dyStr,10), dm = parseInt(dmStr,10);
-  const now = new Date();
-  const meses = [];
-  let y = dy, m = dm;
-  while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth()+1)) {
-    meses.push(`${y}-${pad(m)}`);
-    m++; if(m>12){ m=1; y++; }
-  }
-  if(meses.length === 0){ showToast('Escolhe um mês no passado ou o mês atual.'); return; }
-  if(meses.length > 36){ showToast('Período muito longo (máx. 36 meses de uma vez) — escolhe uma data mais recente.'); return; }
-
-  const statusEl = document.getElementById('syncHistoricoStatus');
-  const btn = document.getElementById('btnSyncHistorico');
-  const accessKey = localStorage.getItem('painelDreAccessKey') || '';
-  btn.disabled = true;
-  statusEl.style.display = 'block';
-  statusEl.style.color = 'var(--muted)';
-
-  let totalVendas = 0, totalNovasEntradas = 0, mesesComErro = [];
-  for(let i=0; i<meses.length; i++){
-    const mk = meses[i];
-    statusEl.textContent = `Sincronizando ${i+1}/${meses.length}: ${mk}...`;
-    try{
-      const res = await fetch(`/api/reserva-ink/sync?loja=${loja}&month=${mk}&access=${encodeURIComponent(accessKey)}`);
-      const data = await res.json();
-      if(res.ok && data.ok){ totalVendas += data.vendasRealizadas; totalNovasEntradas += data.novasEntradasCaixa; }
-      else mesesComErro.push(mk);
-    }catch(e){ mesesComErro.push(mk); }
-    await new Promise(r=>setTimeout(r, 250)); // não martelar a API da Reserva Ink
-  }
-
-  await loadStore();
-  renderAll();
-  statusEl.style.color = mesesComErro.length ? 'var(--negative)' : 'var(--positive)';
-  statusEl.textContent = `Histórico sincronizado: ${meses.length} mês(es), ${totalVendas} vendas encontradas, ${totalNovasEntradas} nova(s) entrada(s) no caixa` + (mesesComErro.length ? `. Deu erro em: ${mesesComErro.join(', ')} — tenta de novo só esses meses.` : '.');
-  btn.disabled = false;
 });
 
 document.querySelectorAll('#despesasLedgerFiltro button').forEach(btn=>{
