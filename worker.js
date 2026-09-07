@@ -60,18 +60,20 @@ const RESERVA_INK_BASE = 'https://api.reserva.ink';
 // a Petnip tambem passar a usar a Reserva Ink.
 const RESERVA_INK_LOJAS = ['vivashop'];
 
-// Pedidos que nao representam uma venda de verdade (reembolsado, expirado,
-// pagamento nao autorizado ou pedido de troca) - mesma regra usada nas abas
-// de Vendas do painel (pedidoContaComoVenda no painel-dre.html), duplicada
-// aqui pra manter a sincronizacao automatica do DRE consistente com o resto
-// do painel. Se um pedido chega marcado como pago mas depois e reembolsado,
-// ou e uma troca sem custo pro cliente, ele NAO deve contar como venda nem
-// aqui nem la.
-const STATUS_EXCLUIDOS_VENDAS = ['refunded', 'refund_requested', 'expired', 'not_authorized'];
+// So conta como venda de verdade um pedido com pagamento efetivamente
+// confirmado (status "paid") que nao seja pedido de troca - mesma regra
+// usada nas abas de Vendas do painel (pedidoContaComoVenda no
+// painel-dre.html), duplicada aqui pra manter a sincronizacao automatica do
+// DRE consistente com o resto do painel. E uma regra de INCLUSAO (exige
+// "paid") em vez de lista de status pra excluir: a Reserva Ink tem varios
+// status que nao sao venda (reembolsado, expirado, nao autorizado,
+// pendente, ...) e uma lista de exclusao sempre corre o risco de esquecer
+// algum. is_exchange continua checado a parte por seguranca, mesmo pedidos
+// de troca nao vindo com payment_status "paid".
 function pedidoContaComoVenda(o) {
   if (o.is_exchange) return false;
   const status = String(o.payment_status || o.order_status || '').toLowerCase();
-  return !STATUS_EXCLUIDOS_VENDAS.includes(status);
+  return status === 'paid';
 }
 
 // busca todas as paginas de um endpoint que declara total_pages (orders, withdraws)
@@ -362,3 +364,4 @@ export default {
     }
   }
 };
+
