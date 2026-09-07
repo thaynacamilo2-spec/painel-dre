@@ -22,34 +22,34 @@
 
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,500;0,600;1,400&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root{
-  --ink:#2C4159;
-  --ink-soft:#3E5876;
-  --paper:#E9F1F9;
-  --card:#FBFDFF;
-  --line:#C7DBEC;
-  --line-soft:#DCEAF5;
+  --ink:#16181A;
+  --ink-soft:#3C4046;
+  --paper:#F5F4F0;
+  --card:#FFFFFF;
+  --line:#E7E5DF;
+  --line-soft:#EFEDE7;
   --positive:#2F6B4F;
   --positive-soft:#E4EEE7;
   --negative:#A63A2E;
   --negative-soft:#F5E4E1;
-  --accent:#6C97C2;
-  --accent-soft:#DDE9F5;
-  --muted:#6B7F94;
+  --accent:#1F6FEB;
+  --accent-soft:#E9EFFC;
+  --muted:#5C6066;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{
   background:var(--paper);
   color:var(--ink);
-  font-family:'Inter',sans-serif;
+  font-family:'Archivo',sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3,.serif{font-family:'Fraunces',serif;}
+h1,h2,h3,.serif{font-family:'Newsreader',serif;}
 .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric: tabular-nums;}
-button{font-family:'Inter',sans-serif;}
+button{font-family:'Archivo',sans-serif;}
 a{color:inherit;}
 
 ::selection{background:var(--accent-soft);}
@@ -67,7 +67,7 @@ a{color:inherit;}
   padding:28px 20px;
 }
 #sidebar .brand{
-  font-family:'Fraunces',serif;
+  font-family:'Newsreader',serif;
   font-size:22px;
   font-weight:600;
   letter-spacing:.2px;
@@ -76,7 +76,7 @@ a{color:inherit;}
 }
 #sidebar .brand-sub{
   font-size:12.5px;
-  color:#a7b0c4;
+  color:#9A9DA3;
   margin-bottom:26px;
 }
 .loja-switch{
@@ -90,7 +90,7 @@ a{color:inherit;}
   flex:1;
   background:transparent;
   border:none;
-  color:#c7cfe0;
+  color:#9A9DA3;
   font-size:12.5px;
   font-weight:600;
   padding:7px 4px;
@@ -107,7 +107,7 @@ nav.tabs button{
   text-align:left;
   background:transparent;
   border:none;
-  color:#c7cfe0;
+  color:#C7C4BC;
   font-size:14.5px;
   padding:10px 12px;
   border-radius:8px;
@@ -119,14 +119,14 @@ nav.tabs button{
 }
 nav.tabs button:hover{background:rgba(255,255,255,.06);}
 nav.tabs button.active{background:rgba(255,255,255,.1); color:#fff; font-weight:600;}
-nav.tabs .dot{width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55;}
+nav.tabs .dot{width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.45;}
 nav.tabs button.active .dot{background:var(--accent); opacity:1;}
 nav.tabs .nav-group-label{
   font-size:11px;
   font-weight:700;
   letter-spacing:.06em;
   text-transform:uppercase;
-  color:#7c8494;
+  color:#7C8088;
   padding:14px 12px 4px;
 }
 nav.tabs .nav-group-label:first-child{padding-top:2px;}
@@ -134,7 +134,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
 #sidebar .foot{
   margin-top:auto;
   font-size:11.5px;
-  color:#7c8296;
+  color:#7C8088;
   line-height:1.5;
   padding-top:20px;
 }
@@ -161,14 +161,14 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
 }
 .month-nav button:hover{border-color:var(--accent);}
 .month-label{
-  font-family:'Fraunces',serif;
+  font-family:'Newsreader',serif;
   font-size:20px;
   font-weight:600;
   text-transform:capitalize;
   min-width:170px;
 }
 .month-nav .today-btn{
-  width:auto; padding:0 12px; font-size:12.5px; color:var(--muted); font-family:'Inter',sans-serif;
+  width:auto; padding:0 12px; font-size:12.5px; color:var(--muted); font-family:'Archivo',sans-serif;
 }
 
 .filtro-botoes{
@@ -207,7 +207,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
   margin-bottom:6px;
 }
 .hero-main .value{
-  font-family:'Fraunces',serif;
+  font-family:'Newsreader',serif;
   font-size:42px;
   font-weight:600;
   line-height:1;
@@ -235,7 +235,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
 .hero-main .trend-badge{right:40px;}
 
 .section-title{
-  font-family:'Fraunces',serif;
+  font-family:'Newsreader',serif;
   font-size:17px;
   font-weight:600;
   margin:32px 0 14px;
@@ -243,18 +243,18 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
   align-items:center;
   justify-content:space-between;
 }
-.section-title .hint{font-family:'Inter',sans-serif; font-weight:400; font-size:12.5px; color:var(--muted);}
+.section-title .hint{font-family:'Archivo',sans-serif; font-weight:400; font-size:12.5px; color:var(--muted);}
 
 .periodo-filter{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:22px;}
 .periodo-filter .field-row{margin-bottom:0; flex-direction:row; align-items:center; gap:8px;}
 .periodo-filter .field-row label{white-space:nowrap;}
-.periodo-filter input[type="date"]{padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-family:'Inter',sans-serif; font-size:13.5px;}
+.periodo-filter input[type="date"]{padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-family:'Archivo',sans-serif; font-size:13.5px;}
 .periodo-filter .sep{color:var(--muted); font-size:13px;}
 
 .kpi-grid{display:grid; grid-template-columns:repeat(4, minmax(150px,1fr)); gap:14px; margin-bottom:26px;}
 .kpi-tile{position:relative; background:#fff; border:1px solid var(--line-soft); border-radius:12px; padding:16px 18px;}
 .kpi-tile .label{font-size:12.5px; color:var(--muted); margin-bottom:6px;}
-.kpi-tile .value{font-family:'Fraunces',serif; font-size:22px; font-weight:600;}
+.kpi-tile .value{font-family:'Newsreader',serif; font-size:22px; font-weight:600;}
 .kpi-tile .trend-badge{position:absolute; top:14px; right:14px;}
 @media (max-width:900px){ .kpi-grid{grid-template-columns:repeat(2, 1fr);} }
 
@@ -318,7 +318,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
   background:#fff;
   color:var(--ink);
 }
-.field-row select{font-family:'Inter',sans-serif;}
+.field-row select{font-family:'Archivo',sans-serif;}
 .field-row input:focus, .field-row select:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent);}
 
 .btn{
@@ -354,7 +354,7 @@ table.list tr:last-child td{border-bottom:none;}
 .dre3-table th{
   text-align:right; font-weight:600; color:var(--ink); font-size:12.5px;
   padding:14px 18px; border-bottom:1.5px solid var(--ink); white-space:nowrap;
-  font-family:'Fraunces',serif;
+  font-family:'Newsreader',serif;
 }
 .dre3-table th:first-child{text-align:left;}
 .dre3-table td{padding:11px 18px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
@@ -364,12 +364,12 @@ table.list tr:last-child td{border-bottom:none;}
 .dre3-table tr.dre3-spacer td{padding:14px 0; border:none;}
 .dre3-table tr.dre3-despesa-header td{
   padding:6px 18px; border-bottom:1px solid var(--line-soft);
-  font-size:11px; color:var(--muted); text-transform:none; background:#F0F0EE;
+  font-size:11px; color:var(--muted); text-transform:none; background:#F2F1EE;
 }
-.dre3-table tr.dre3-despesa td{background:#F0F0EE;}
+.dre3-table tr.dre3-despesa td{background:#F2F1EE;}
 .dre3-table tr.dre3-despesa td:first-child{color:var(--ink-soft);}
 .dre3-table tr.dre3-despesa-header{cursor:pointer;}
-.dre3-table tr.dre3-despesa-header:hover td{background:#E6E6E3;}
+.dre3-table tr.dre3-despesa-header:hover td{background:#EBE9E3;}
 .dre3-table td.dre3-custos-click{cursor:pointer;}
 .dre3-table td.dre3-custos-click:hover{text-decoration:underline; color:var(--accent);}
 .dre3-table th.dre3-extra-col{border-left:1.5px solid var(--ink); color:var(--accent);}
@@ -416,7 +416,7 @@ table.list tr:last-child td{border-bottom:none;}
   #sidebarBackdrop{display:none;}
   #sidebarBackdrop.show{
     display:block; position:fixed; inset:0;
-    background:rgba(20,24,36,.45); z-index:55;
+    background:rgba(22,24,26,.45); z-index:55;
   }
   #sidebar{
     position:fixed; top:0; left:0; height:100vh; width:230px;
@@ -525,7 +525,7 @@ table.list tr:last-child td{border-bottom:none;}
           <div id="syncReservaInkStatus" style="display:none; font-size:12px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;"></div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:10px 12px; background:var(--accent-soft); border-radius:8px;">
             <span style="font-size:12px; color:var(--muted); white-space:nowrap;">Primeira vez usando? Traga o histórico:</span>
-            <input type="month" id="inSyncHistoricoDesde" style="font-size:12.5px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:'Inter',sans-serif; background:var(--card);">
+            <input type="month" id="inSyncHistoricoDesde" style="font-size:12.5px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:'Archivo',sans-serif; background:var(--card);">
             <button class="btn secondary" id="btnSyncHistorico" style="font-size:12px; padding:6px 12px;">Sincronizar até hoje</button>
           </div>
           <div id="syncHistoricoStatus" style="display:none; font-size:12px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;"></div>
@@ -2010,13 +2010,13 @@ function renderCategorias(){
     return `<tr>
       <td>${c.nome}</td>
       <td>
-        <select data-catdre="${c.nome}" style="font-family:'Inter',sans-serif; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:7px;">
+        <select data-catdre="${c.nome}" style="font-family:'Archivo',sans-serif; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:7px;">
           <option value="1" ${c.entraDRE?'selected':''}>Entra no DRE (despesa operacional)</option>
           <option value="0" ${!c.entraDRE?'selected':''}>Não entra no DRE (só aparece no caixa)</option>
         </select>
       </td>
       <td>
-        <select data-catgrupo="${c.nome}" style="font-family:'Inter',sans-serif; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:7px;">
+        <select data-catgrupo="${c.nome}" style="font-family:'Archivo',sans-serif; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:7px;">
           ${GRUPOS_DRE3.map(g=>`<option value="${g}" ${c.grupo===g?'selected':''}>${g}</option>`).join('')}
         </select>
       </td>
@@ -2056,11 +2056,11 @@ function renderPainelCharts(){
   const labels = months.map(mo=>`${MESES_ABREV[mo.m]}/${String(mo.y).slice(2)}`);
   const computed = months.map(mo=>computeDRE(mo.y,mo.m));
 
-  const colAccent = css('--accent') || '#6C97C2';
+  const colAccent = css('--accent') || '#1F6FEB';
   const colNegative = css('--negative') || '#A63A2E';
-  const colLine = css('--line') || '#C7DBEC';
-  const colMuted = css('--muted') || '#6B7F94';
-  Chart.defaults.font.family = "'Inter', sans-serif";
+  const colLine = css('--line') || '#E7E5DF';
+  const colMuted = css('--muted') || '#5C6066';
+  Chart.defaults.font.family = "'Archivo', sans-serif";
   Chart.defaults.color = colMuted;
 
   if(chartInstances.painelFacebook){ chartInstances.painelFacebook.destroy(); delete chartInstances.painelFacebook; }
@@ -2155,14 +2155,14 @@ function renderGraficos(){
 
   renderMetaRoasButtons();
 
-  const colAccent = css('--accent') || '#6C97C2';
-  const colInk = css('--ink') || '#2C4159';
+  const colAccent = css('--accent') || '#1F6FEB';
+  const colInk = css('--ink') || '#16181A';
   const colPositive = css('--positive') || '#2F6B4F';
   const colNegative = css('--negative') || '#A63A2E';
-  const colMuted = css('--muted') || '#6B7F94';
-  const colLine = css('--line') || '#C7DBEC';
+  const colMuted = css('--muted') || '#5C6066';
+  const colLine = css('--line') || '#E7E5DF';
 
-  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.family = "'Archivo', sans-serif";
   Chart.defaults.color = colMuted;
 
   function destroy(id){ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
@@ -2249,7 +2249,7 @@ function renderPizza(months){
     }
   });
   const entries = Object.entries(byCat).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-  const pieColors = ['#6C97C2','#8FB3D9','#A8C6E0','#4F7BA6','#C4DCEF','#7FA8CC','#365D80','#9CC2E3','#527FA8','#B7D3EA','#3D6F97','#D6E7F5','#2C4159','#E9F1F9'];
+  const pieColors = ['#1F6FEB','#4C8EF0','#7AACF5','#0F52B8','#A8C7F8','#1554B8','#3C7FE0','#8FB8FF','#0D3D82','#B8D2FB','#2A63C4','#CFE1FD','#16181A','#F5F4F0'];
   if(chartInstances.pizza){ chartInstances.pizza.destroy(); delete chartInstances.pizza; }
   const totalPeriodo = entries.reduce((a,[,v])=>a+v,0);
   const periodoLabel = graficosFiltroAno===null ? 'todo o histórico' : String(graficosFiltroAno);
@@ -2404,7 +2404,7 @@ async function renderVendasDia(){
 let vgYear = new Date().getFullYear();
 let vgMonth = new Date().getMonth();
 let vgAnoTodo = false;
-const pieColorsVg = ['#6C97C2','#8FB3D9','#A8C6E0','#4F7BA6','#C4DCEF','#7FA8CC','#365D80','#9CC2E3','#527FA8','#B7D3EA','#3D6F97','#D6E7F5','#2C4159','#E9F1F9'];
+const pieColorsVg = ['#1F6FEB','#4C8EF0','#7AACF5','#0F52B8','#A8C7F8','#1554B8','#3C7FE0','#8FB8FF','#0D3D82','#B8D2FB','#2A63C4','#CFE1FD','#16181A','#F5F4F0'];
 function destroyChart(id){ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
 
 // Independente do filtro de ano do Painel/DRE (que só olha os meses com despesa
@@ -2956,13 +2956,13 @@ document.getElementById('btnImportar').addEventListener('click', async ()=>{
     document.getElementById('app').style.display = 'none';
     const gate = document.createElement('div');
     gate.id = 'accessGate';
-    gate.style.cssText = 'position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#E9F1F9; font-family:Inter,sans-serif; z-index:999;';
+    gate.style.cssText = 'position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#F5F4F0; font-family:Archivo,sans-serif; z-index:999;';
     gate.innerHTML = `
-      <form id="accessForm" style="background:#FBFDFF; padding:32px; border-radius:14px; box-shadow:0 4px 24px rgba(28,35,51,.12); text-align:center; max-width:320px; width:90%;">
-        <h2 style="margin:0 0 6px; font-family:Fraunces,serif; color:#2C4159;">Painel DRE</h2>
-        <p style="color:#6B7F94; font-size:13.5px; margin:0 0 18px;">Digite a chave de acesso pra continuar.</p>
-        <input id="accessInput" type="password" placeholder="Chave de acesso" style="width:100%; padding:10px 12px; margin-bottom:14px; border:1px solid #C7DBEC; border-radius:8px; box-sizing:border-box; font-size:14px;">
-        <button type="submit" style="width:100%; padding:10px; background:#2C4159; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Entrar</button>
+      <form id="accessForm" style="background:#FFFFFF; padding:32px; border-radius:14px; box-shadow:0 4px 24px rgba(20,22,24,.12); text-align:center; max-width:320px; width:90%;">
+        <h2 style="margin:0 0 6px; font-family:Newsreader,serif; color:#16181A;">Painel DRE</h2>
+        <p style="color:#5C6066; font-size:13.5px; margin:0 0 18px;">Digite a chave de acesso pra continuar.</p>
+        <input id="accessInput" type="password" placeholder="Chave de acesso" style="width:100%; padding:10px 12px; margin-bottom:14px; border:1px solid #E7E5DF; border-radius:8px; box-sizing:border-box; font-size:14px;">
+        <button type="submit" style="width:100%; padding:10px; background:#16181A; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Entrar</button>
       </form>`;
     document.body.appendChild(gate);
     document.getElementById('accessForm').addEventListener('submit', (e)=>{
