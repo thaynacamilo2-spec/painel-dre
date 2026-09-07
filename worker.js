@@ -1,4 +1,3 @@
-
 // Worker unico: serve o site (index.html), a API do painel (/api/data)
 // e a sincronizacao com a Reserva Ink (/api/reserva-ink/sync + agendamento diario)
 
@@ -61,6 +60,20 @@ const RESERVA_INK_BASE = 'https://api.reserva.ink';
 // a Petnip tambem passar a usar a Reserva Ink.
 const RESERVA_INK_LOJAS = ['vivashop'];
 
+// Pedidos que nao representam uma venda de verdade (reembolsado, expirado,
+// pagamento nao autorizado ou pedido de troca) - mesma regra usada nas abas
+// de Vendas do painel (pedidoContaComoVenda no painel-dre.html), duplicada
+// aqui pra manter a sincronizacao automatica do DRE consistente com o resto
+// do painel. Se um pedido chega marcado como pago mas depois e reembolsado,
+// ou e uma troca sem custo pro cliente, ele NAO deve contar como venda nem
+// aqui nem la.
+const STATUS_EXCLUIDOS_VENDAS = ['refunded', 'refund_requested', 'expired', 'not_authorized'];
+function pedidoContaComoVenda(o) {
+  if (o.is_exchange) return false;
+  const status = String(o.payment_status || o.order_status || '').toLowerCase();
+  return !STATUS_EXCLUIDOS_VENDAS.includes(status);
+}
+
 // busca todas as paginas de um endpoint que declara total_pages (orders, withdraws)
 async function fetchAllPages(url, token, arrayField, maxPages = 50) {
   let page = 1;
@@ -116,6 +129,14 @@ async function fetchPrepaymentsForMonth(token, monthStart, monthEnd, maxPages = 
   return matched;
 }
 
+// Horario de Brasilia = UTC-3 o ano inteiro (Brasil nao tem mais horario de
+// verao desde 2019), entao o deslocamento e fixo - sem precisar de tabela de
+// fuso horario. monthStart/monthEnd abaixo sao os instantes UTC que
+// correspondem a meia-noite do dia 1 e ao ultimo instante do ultimo dia do
+// mes, ambos em horario de Brasilia (evita contar/perder pedidos feitos nas
+// primeiras/ultimas horas do mes por causa da diferenca de fuso).
+const BRT_OFFSET_HOURS = 3;
+
 function monthBounds(monthKey) {
   const [yStr, mStr] = monthKey.split('-');
   const y = parseInt(yStr, 10), m = parseInt(mStr, 10);
@@ -123,8 +144,10 @@ function monthBounds(monthKey) {
   return {
     beginDateStr: `${y}-${String(m).padStart(2, '0')}-01`,
     endDateStr: `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`,
-    monthStart: new Date(Date.UTC(y, m - 1, 1)),
-    monthEnd: new Date(Date.UTC(y, m - 1, lastDay, 23, 59, 59))
+    // 00:00:00 do dia 1 em Brasilia = 03:00:00 UTC do dia 1
+    monthStart: new Date(Date.UTC(y, m - 1, 1, BRT_OFFSET_HOURS, 0, 0, 0)),
+    // 23:59:59.999 do ultimo dia em Brasilia = 02:59:59.999 UTC do dia 1 do mes seguinte
+    monthEnd: new Date(Date.UTC(y, m, 1, BRT_OFFSET_HOURS, 0, 0, 0) - 1)
   };
 }
 
@@ -135,12 +158,18 @@ async function syncReservaInk(env, loja, monthKey) {
 
   const { beginDateStr, endDateStr, monthStart, monthEnd } = monthBounds(monthKey);
 
-  // 1. pedidos pagos do mes -> vendas realizadas, itens vendidos, faturamento, lucro bruto
+  // 1. pedidos do mes -> vendas realizadas, itens vendidos, faturamento, lucro bruto
+  // Antes isso filtrava so por payment_status=paid direto na API da Reserva
+  // Ink - o que nao exclui pedidos de troca (is_exchange), e depende da API
+  // atualizar o payment_status pra "refunded"/etc quando um pedido pago e
+  // reembolsado depois. Agora busca TODOS os status (igual as abas de
+  // Vendas) e aplica o mesmo filtro pedidoContaComoVenda, pra manter os
+  // numeros do DRE sempre consistentes com Vendas por dia / Visão geral.
   const ordersUrl = new URL(`${RESERVA_INK_BASE}/v1/stores/orders`);
   ordersUrl.searchParams.set('begin_date', beginDateStr);
   ordersUrl.searchParams.set('end_date', endDateStr);
-  ordersUrl.searchParams.set('payment_status', 'paid');
-  const orders = await fetchAllPages(ordersUrl, token, 'orders');
+  const todosPedidos = await fetchAllPages(ordersUrl, token, 'orders');
+  const orders = todosPedidos.filter(pedidoContaComoVenda);
 
   let itensVendidos = 0, faturamento = 0, lucroBruto = 0;
   for (const o of orders) {
