@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1401,6 +1402,11 @@ function computeDRE(y,m){
   const mediaDiariaAds = divisorDias>0 ? facebookGasto/divisorDias : 0;
   const margemGasto = facebookGasto>0 ? manual.lucroBruto/facebookGasto : NaN;
   const entradasMes = caixa.entradas.filter(e=>{ const d=new Date(e.data+'T00:00:00'); return d.getFullYear()===y && d.getMonth()===m; }).reduce((a,b)=>a+Number(b.valor),0);
+  // Retiradas do proprietário no mês — puramente informativo. Vem de caixa.retiradas
+  // (estrutura separada de dre.expenses de propósito: retirada de sócio é saída de
+  // caixa real, mas não é custo operacional do negócio, então nunca entra em
+  // "custos"/totalTodasCategorias nem afeta lucroLiquido/roi/roas acima).
+  const retiradasMes = caixa.retiradas.filter(e=>{ const d=new Date(e.data+'T00:00:00'); return d.getFullYear()===y && d.getMonth()===m; }).reduce((a,b)=>a+Number(b.valor),0);
   const roasCaixa = facebookGasto>0 ? entradasMes/facebookGasto : NaN;
   const resultadoCaixaMes = entradasMes - totalTodasCategorias;
   const custoProdutos = manual.faturamento - manual.lucroBruto;
@@ -1408,7 +1414,7 @@ function computeDRE(y,m){
   const custoVendaUnitAds = manual.vendasRealizadas>0 ? facebookGasto/manual.vendasRealizadas : NaN;
   const custoTotalUnit = manual.itensVendidos>0 ? custos/manual.itensVendidos : NaN;
   const margemGastoFacebookLucro = manual.lucroBruto>0 ? facebookGasto/manual.lucroBruto : NaN;
-  return { manual, byCat, custos, totalTodasCategorias, facebookGasto, lucroLiquido, roi, roas, pctLucroBruto, imposto, pctImposto, mediaDiariaAds, margemGasto, entradasMes, roasCaixa, resultadoCaixaMes, custoProdutos, custoUnitAds, custoVendaUnitAds, custoTotalUnit, margemGastoFacebookLucro };
+  return { manual, byCat, custos, totalTodasCategorias, facebookGasto, lucroLiquido, roi, roas, pctLucroBruto, imposto, pctImposto, mediaDiariaAds, margemGasto, entradasMes, retiradasMes, roasCaixa, resultadoCaixaMes, custoProdutos, custoUnitAds, custoVendaUnitAds, custoTotalUnit, margemGastoFacebookLucro };
 }
 
 function getGroupTotals(y,m){
@@ -1731,6 +1737,7 @@ function renderPainel(){
     <div class="mini"><div class="label">Entradas de caixa no mês</div><div class="value">${fmtBRL(d.entradasMes)}</div></div>
     <div class="mini"><div class="label">ROAS caixa (entradas ÷ Facebook)</div><div class="value">${fmtX(d.roasCaixa)}</div></div>
     <div class="mini"><div class="label">Resultado de caixa no mês (entradas − despesas)</div><div class="value" style="color:${d.resultadoCaixaMes>=0?'var(--positive)':'var(--negative)'};">${fmtBRL(d.resultadoCaixaMes)}</div></div>
+    <div class="mini"><div class="label">Retiradas do proprietário no mês <span style="font-size:10.5px;">(fora do DRE — não afeta lucro)</span></div><div class="value">${fmtBRL(d.retiradasMes)}</div></div>
   `;
 
   const custoMedioGrid = document.getElementById('custoMedioGrid');
