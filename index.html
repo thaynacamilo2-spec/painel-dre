@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -23,22 +22,25 @@
 
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,500;0,600;1,400&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root{
-  --ink:#16181A;
-  --ink-soft:#3C4046;
-  --paper:#F5F4F0;
-  --card:#FFFFFF;
-  --line:#E7E5DF;
-  --line-soft:#EFEDE7;
-  --positive:#2F6B4F;
-  --positive-soft:#E4EEE7;
-  --negative:#A63A2E;
-  --negative-soft:#F5E4E1;
-  --accent:#1F6FEB;
-  --accent-soft:#E9EFFC;
-  --muted:#5C6066;
+  /* paleta VivaShop */
+  --blue:#094C75; --blue-2:#ADD2DA; --mustard:#EBA940; --cream:#FBEDC8;
+  --terra:#963417; --red:#B01515; --green:#165733; --green-2:#69934F;
+  --ink:#0B2A40;
+  --ink-soft:#2E4A5E;
+  --paper:#FCF3DB;
+  --card:#FFFDF8;
+  --line:#EAD9A9;
+  --line-soft:#F4E9C8;
+  --positive:#165733;
+  --positive-soft:#DCEBD0;
+  --negative:#B01515;
+  --negative-soft:#F8DDD3;
+  --accent:#094C75;
+  --accent-soft:#FBEDC8;
+  --muted:#7A6A4F;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -48,7 +50,7 @@ body{
   font-family:'Archivo',sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3,.serif{font-family:'Newsreader',serif;}
+h1,h2,h3,.serif{font-family:'Anton',sans-serif;}
 .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric: tabular-nums;}
 button{font-family:'Archivo',sans-serif;}
 a{color:inherit;}
@@ -68,7 +70,7 @@ a{color:inherit;}
   padding:28px 20px;
 }
 #sidebar .brand{
-  font-family:'Newsreader',serif;
+  font-family:'Anton',sans-serif;
   font-size:22px;
   font-weight:600;
   letter-spacing:.2px;
@@ -162,7 +164,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
 }
 .month-nav button:hover{border-color:var(--accent);}
 .month-label{
-  font-family:'Newsreader',serif;
+  font-family:'Anton',sans-serif;
   font-size:20px;
   font-weight:600;
   text-transform:capitalize;
@@ -208,7 +210,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
   margin-bottom:6px;
 }
 .hero-main .value{
-  font-family:'Newsreader',serif;
+  font-family:'Anton',sans-serif;
   font-size:42px;
   font-weight:600;
   line-height:1;
@@ -236,7 +238,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
 .hero-main .trend-badge{right:40px;}
 
 .section-title{
-  font-family:'Newsreader',serif;
+  font-family:'Anton',sans-serif;
   font-size:17px;
   font-weight:600;
   margin:32px 0 14px;
@@ -255,7 +257,7 @@ nav.tabs .nav-group-label:first-child{padding-top:2px;}
 .kpi-grid{display:grid; grid-template-columns:repeat(4, minmax(150px,1fr)); gap:14px; margin-bottom:26px;}
 .kpi-tile{position:relative; background:#fff; border:1px solid var(--line-soft); border-radius:12px; padding:16px 18px;}
 .kpi-tile .label{font-size:12.5px; color:var(--muted); margin-bottom:6px;}
-.kpi-tile .value{font-family:'Newsreader',serif; font-size:22px; font-weight:600;}
+.kpi-tile .value{font-family:'Anton',sans-serif; font-size:22px; font-weight:600;}
 .kpi-tile .trend-badge{position:absolute; top:14px; right:14px;}
 @media (max-width:900px){ .kpi-grid{grid-template-columns:repeat(2, 1fr);} }
 
@@ -355,7 +357,7 @@ table.list tr:last-child td{border-bottom:none;}
 .dre3-table th{
   text-align:right; font-weight:600; color:var(--ink); font-size:12.5px;
   padding:14px 18px; border-bottom:1.5px solid var(--ink); white-space:nowrap;
-  font-family:'Newsreader',serif;
+  font-family:'Anton',sans-serif;
 }
 .dre3-table th:first-child{text-align:left;}
 .dre3-table td{padding:11px 18px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
@@ -434,6 +436,124 @@ table.list tr:last-child td{border-bottom:none;}
   .hero-row{gap:20px; padding:20px;}
   .hero-main{padding-right:20px;}
 }
+
+/* ================= visual VivaShop ================= */
+.month-nav button.btn{width:auto; height:auto; border-radius:24px; font-size:13.5px;}
+.month-nav .btn.secondary{border-radius:24px;}
+body{font-synthesis:none;}
+h1,h2,h3,.serif{font-weight:400; letter-spacing:.02em;}
+h2.serif{font-size:34px; text-transform:uppercase; color:var(--blue); line-height:1.05;}
+::selection{background:var(--mustard); color:var(--ink);}
+
+#sidebar{
+  background:var(--blue);
+  background-image:radial-gradient(circle at 120% -10%, rgba(235,169,64,.35) 0, rgba(235,169,64,0) 45%), radial-gradient(circle at -30% 110%, rgba(173,210,218,.22) 0, rgba(173,210,218,0) 50%);
+  color:var(--cream);
+}
+#sidebar .brand{font-size:23px; white-space:nowrap; text-transform:uppercase; letter-spacing:.04em; color:var(--cream); display:flex; align-items:center; gap:10px;}
+#sidebar .brand::before{content:''; width:26px; height:26px; background:var(--mustard); clip-path:polygon(50.0% 0.0%, 55.9% 12.5%, 65.5% 2.4%, 67.3% 16.1%, 79.4% 9.5%, 76.9% 23.1%, 90.5% 20.6%, 83.9% 32.7%, 97.6% 34.5%, 87.5% 44.1%, 100.0% 50.0%, 87.5% 55.9%, 97.6% 65.5%, 83.9% 67.3%, 90.5% 79.4%, 76.9% 76.9%, 79.4% 90.5%, 67.3% 83.9%, 65.5% 97.6%, 55.9% 87.5%, 50.0% 100.0%, 44.1% 87.5%, 34.5% 97.6%, 32.7% 83.9%, 20.6% 90.5%, 23.1% 76.9%, 9.5% 79.4%, 16.1% 67.3%, 2.4% 65.5%, 12.5% 55.9%, 0.0% 50.0%, 12.5% 44.1%, 2.4% 34.5%, 16.1% 32.7%, 9.5% 20.6%, 23.1% 23.1%, 20.6% 9.5%, 32.7% 16.1%, 34.5% 2.4%, 44.1% 12.5%); flex-shrink:0;}
+#sidebar .brand-sub{color:var(--blue-2);}
+.loja-switch{background:rgba(0,0,0,.2);}
+.loja-switch button{color:var(--blue-2);}
+.loja-switch button.active{background:var(--mustard); color:var(--ink);}
+nav.tabs button{color:var(--cream); opacity:.88; border-radius:10px;}
+nav.tabs button:hover{background:rgba(251,237,200,.12); opacity:1;}
+nav.tabs button.active{background:var(--cream); color:var(--blue); font-weight:700; opacity:1;}
+nav.tabs button.active .dot{background:var(--terra); opacity:1;}
+nav.tabs .nav-group-label{color:var(--mustard);}
+#sidebar .foot{color:var(--blue-2);}
+#navToggle{background:var(--blue) !important; color:var(--cream) !important;}
+
+.month-label{color:var(--blue); font-size:24px; text-transform:uppercase;}
+.month-nav button{border-radius:50%; border:2px solid var(--blue); color:var(--blue); background:var(--card);}
+.month-nav button:hover{background:var(--mustard); border-color:var(--blue);}
+.month-nav .today-btn{border-radius:20px; font-size:12px; width:auto; color:var(--blue);}
+
+.btn-group button{border:1.5px solid var(--blue); color:var(--blue); border-radius:20px; background:transparent; font-weight:600;}
+.btn-group button:hover{background:var(--cream); border-color:var(--blue);}
+.btn-group button.active{background:var(--blue); border-color:var(--blue); color:var(--cream);}
+
+.hero-row{
+  position:relative; overflow:hidden;
+  background:var(--blue); border:none; color:var(--cream);
+  border-radius:22px; box-shadow:0 5px 0 var(--ink);
+}
+.hero-row{padding-right:96px;}
+.hero-row::after{content:''; position:absolute; right:-34px; top:-34px; width:120px; height:120px; background:var(--mustard); opacity:.95; clip-path:polygon(50.0% 0.0%, 55.9% 12.5%, 65.5% 2.4%, 67.3% 16.1%, 79.4% 9.5%, 76.9% 23.1%, 90.5% 20.6%, 83.9% 32.7%, 97.6% 34.5%, 87.5% 44.1%, 100.0% 50.0%, 87.5% 55.9%, 97.6% 65.5%, 83.9% 67.3%, 90.5% 79.4%, 76.9% 76.9%, 79.4% 90.5%, 67.3% 83.9%, 65.5% 97.6%, 55.9% 87.5%, 50.0% 100.0%, 44.1% 87.5%, 34.5% 97.6%, 32.7% 83.9%, 20.6% 90.5%, 23.1% 76.9%, 9.5% 79.4%, 16.1% 67.3%, 2.4% 65.5%, 12.5% 55.9%, 0.0% 50.0%, 12.5% 44.1%, 2.4% 34.5%, 16.1% 32.7%, 9.5% 20.6%, 23.1% 23.1%, 20.6% 9.5%, 32.7% 16.1%, 34.5% 2.4%, 44.1% 12.5%); pointer-events:none;}
+.hero-row > *{position:relative; z-index:1;}
+.hero-main{border-right:1px solid rgba(251,237,200,.25);}
+.hero-main .label, .stat .label{color:var(--blue-2);}
+.hero-main .value{font-size:50px; color:var(--cream); letter-spacing:.01em;}
+.hero-main .value.positive{color:#C7E6A8;}
+.hero-main .value.negative{color:#FFB7A3;}
+.stat .value{color:var(--cream);}
+.stat .value.positive{color:#C7E6A8;}
+.stat .value.negative{color:#FFB7A3;}
+.hero-row .hint{color:var(--blue-2);}
+.trend-badge{font-family:'IBM Plex Mono',monospace;}
+.trend-badge.positive{background:var(--positive-soft); color:var(--positive);}
+.trend-badge.negative{background:var(--negative-soft); color:var(--negative);}
+
+.section-title{font-size:21px; text-transform:uppercase; color:var(--blue); letter-spacing:.04em; margin:38px 0 14px; justify-content:flex-start; gap:10px;}
+.section-title::before{content:''; width:18px; height:18px; background:var(--mustard); clip-path:polygon(50.0% 0.0%, 55.9% 12.5%, 65.5% 2.4%, 67.3% 16.1%, 79.4% 9.5%, 76.9% 23.1%, 90.5% 20.6%, 83.9% 32.7%, 97.6% 34.5%, 87.5% 44.1%, 100.0% 50.0%, 87.5% 55.9%, 97.6% 65.5%, 83.9% 67.3%, 90.5% 79.4%, 76.9% 76.9%, 79.4% 90.5%, 67.3% 83.9%, 65.5% 97.6%, 55.9% 87.5%, 50.0% 100.0%, 44.1% 87.5%, 34.5% 97.6%, 32.7% 83.9%, 20.6% 90.5%, 23.1% 76.9%, 9.5% 79.4%, 16.1% 67.3%, 2.4% 65.5%, 12.5% 55.9%, 0.0% 50.0%, 12.5% 44.1%, 2.4% 34.5%, 16.1% 32.7%, 9.5% 20.6%, 23.1% 23.1%, 20.6% 9.5%, 32.7% 16.1%, 34.5% 2.4%, 44.1% 12.5%); flex-shrink:0;}
+.section-title .hint{margin-left:6px; text-transform:none; letter-spacing:0;}
+.section-title .section-actions{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; text-transform:none; letter-spacing:0;}
+.section-title #btnExportarDespesas{margin-left:auto;}
+
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:20px; box-shadow:0 4px 0 var(--line);}
+.kpi-tile{border-radius:16px; border:1.5px solid var(--line); border-top:6px solid var(--mustard); background:var(--card);}
+.kpi-tile:nth-child(4n+2){border-top-color:var(--terra);}
+.kpi-tile:nth-child(4n+3){border-top-color:var(--green-2);}
+.kpi-tile:nth-child(4n+4){border-top-color:var(--blue);}
+.kpi-tile .value{font-size:26px; color:var(--blue);}
+
+.ledger-row{padding:10px 8px; border-radius:6px; background:linear-gradient(90deg, rgba(235,169,64,.28) var(--p,0%), transparent var(--p,0%));}
+.ledger-row.sub{background:linear-gradient(90deg, rgba(150,52,23,.18) var(--p,0%), transparent var(--p,0%));}
+.ledger-row.total{border-top:2px solid var(--blue); background:none; color:var(--blue);}
+.ledger-row .leader{border-bottom:1px dotted var(--mustard);}
+
+.dados-tile{background:var(--cream); border:1.5px solid var(--line); border-radius:14px;}
+.dados-tile:focus-within{border-color:var(--blue);}
+.dados-tile input:focus{color:var(--blue);}
+.advanced-grid .mini{background:var(--card); border:1.5px solid var(--line); border-radius:14px; border-left:5px solid var(--mustard);}
+.advanced-grid .mini:nth-child(3n+2){border-left-color:var(--terra);}
+.advanced-grid .mini:nth-child(3n+3){border-left-color:var(--green-2);}
+.advanced-grid .mini .value{color:var(--blue);}
+
+.field-row input, .field-row select{border:1.5px solid var(--line); border-radius:10px; background:#fff;}
+.field-row input:focus, .field-row select:focus{outline:2px solid var(--mustard); border-color:var(--blue);}
+
+.btn{background:var(--blue); color:var(--cream); border-radius:24px; padding:11px 22px; box-shadow:0 3px 0 var(--ink); transition:transform .08s, box-shadow .08s;}
+.btn:hover{background:var(--ink-soft);}
+.btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--ink);}
+.btn.secondary{background:transparent; color:var(--blue); border:1.5px solid var(--blue); box-shadow:none;}
+.btn.secondary:hover{background:var(--cream); border-color:var(--blue);}
+.btn.danger{color:var(--red); border:1.5px solid var(--negative-soft); box-shadow:none;}
+.btn.danger:hover{background:var(--negative-soft);}
+.btn:focus-visible, button:focus-visible, select:focus-visible{outline:2px solid var(--mustard);}
+.toast{background:var(--blue); color:var(--cream); border-radius:24px;}
+
+table.list th{color:var(--terra); text-transform:uppercase; letter-spacing:.06em; font-size:11px;}
+.pill.sim{background:var(--positive-soft); color:var(--positive);}
+.pill.nao{background:var(--line-soft); color:var(--muted);}
+
+.dre3-table th{font-size:14px; color:var(--blue); border-bottom:2px solid var(--blue); text-transform:uppercase; letter-spacing:.05em;}
+.dre3-table tr.dre3-total td{border-top:2px solid var(--blue); background:var(--cream); color:var(--blue);}
+.dre3-table tr.dre3-despesa-header td, .dre3-table tr.dre3-despesa td{background:var(--line-soft);}
+.dre3-table tr.dre3-despesa-header:hover td{background:var(--cream);}
+.dre3-table td.dre3-custos-click:hover{color:var(--terra);}
+.dre3-table th.dre3-extra-col{border-left:2px solid var(--blue); color:var(--terra);}
+.dre3-table td.dre3-extra-col{background:var(--cream); border-left:1.5px solid var(--line);}
+.dre3-table tr.dre3-fora-header td{padding:6px 18px; font-size:11px; color:var(--terra); background:rgba(150,52,23,.10); border-bottom:1px solid var(--line-soft); font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+.dre3-table tr.dre3-fora td{background:rgba(150,52,23,.06); color:var(--terra); font-weight:600;}
+.dre3-table tr.dre3-fora td:first-child{color:var(--terra);}
+
+.tag-retirada{display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; background:var(--terra); color:var(--cream); letter-spacing:.02em;}
+.hint-retirada{margin-top:8px; padding:10px 12px; font-size:12.5px; line-height:1.45; border-radius:10px; background:rgba(150,52,23,.10); color:var(--terra); border:1.5px dashed var(--terra);}
+
+.reconcile-diff.ok{background:var(--positive-soft); color:var(--positive);}
+.reconcile-diff.off{background:var(--negative-soft); color:var(--negative);}
+a{color:var(--blue);}
 </style>
 </head>
 <body>
@@ -568,6 +688,7 @@ table.list tr:last-child td{border-bottom:none;}
           <div class="field-row">
             <label>Categoria</label>
             <select id="despCategoria"></select>
+            <div class="hint-retirada" id="despRetiradaHint" style="display:none;">Retirada do proprietário: sai do caixa e aparece no Painel do mês e numa linha própria do DRE, mas <b>não entra nos custos</b> e não reduz Lucro, ROI nem ROAS.</div>
             <div class="newcat-inline" id="newcatBox" style="display:none;">
               <input type="text" id="newcatInput" placeholder="Nome da nova categoria">
               <button class="btn secondary" id="newcatConfirm">Adicionar</button>
@@ -702,18 +823,15 @@ table.list tr:last-child td{border-bottom:none;}
           </div>
         </div>
         <div>
-          <div class="section-title" style="margin-top:0;">Lançar retirada do proprietário</div>
+          <div class="section-title" style="margin-top:0;">Retirada do proprietário</div>
           <div class="card">
-            <div class="field-row"><label>Data</label><input type="date" id="retiradaData"></div>
-            <div class="field-row"><label>Valor (R$)</label><input type="number" step="0.01" id="retiradaValor"></div>
-            <div class="field-row" style="margin-bottom:0;"><label>Descrição</label><input type="text" id="retiradaDesc" placeholder="Ex: pró-labore"></div>
-            <button class="btn" style="margin-top:16px;" id="retiradaSalvar">Lançar retirada</button>
-            <button class="btn secondary" id="retiradaCancelarEdicao" style="display:none; margin-top:16px; margin-left:8px;">Cancelar edição</button>
+            <p style="color:var(--muted); font-size:13.5px; margin-top:0;">Retirada agora é lançada na aba <b>Despesas</b>, escolhendo a categoria <b>Retirada</b>. Ela sai do caixa, aparece no Painel do mês e no DRE numa linha própria, e não reduz o lucro.</p>
+            <button class="btn" id="btnIrRetirada">Lançar retirada</button>
           </div>
         </div>
       </div>
 
-      <div class="section-title">Movimentações</div>
+      <div class="section-title">Movimentações <span class="section-actions"><button class="btn secondary" id="btnExportarCaixa" style="font-size:12.5px; padding:6px 12px;">Exportar movimentações</button> <button class="btn secondary" id="btnExportarCaixaMensal" style="font-size:12.5px; padding:6px 12px;">Exportar resumo mensal</button></span></div>
       <div class="card" style="padding:18px 22px 0;">
         <div class="grid-2">
           <div class="field-row"><label>Tipo</label>
@@ -1075,7 +1193,18 @@ const GRUPO_PADRAO_POR_CATEGORIA = {
 };
 function defaultGrupoForCategoria(nome){ return GRUPO_PADRAO_POR_CATEGORIA[nome] || 'Outros'; }
 
-function defaultCategoryObjects(){ return DEFAULT_CATEGORIES.map(nome=>({nome, entraDRE:true, grupo: defaultGrupoForCategoria(nome)})); }
+// Categoria especial: retirada do proprietário. Sai do caixa, aparece no Painel do mês e numa
+// linha própria do DRE de 3 meses, mas NUNCA entra em Custos / Lucro Líquido / ROI / ROAS.
+const CAT_RETIRADA = 'Retirada';
+function defaultCategoryObjects(){
+  return DEFAULT_CATEGORIES.map(nome=>({nome, entraDRE:true, grupo: defaultGrupoForCategoria(nome)}))
+    .concat([{nome:CAT_RETIRADA, entraDRE:false, grupo:CAT_RETIRADA}]);
+}
+function ensureRetiradaCategory(){
+  const c = dre.categories.find(x=>x.nome===CAT_RETIRADA);
+  if(c){ c.entraDRE = false; c.grupo = CAT_RETIRADA; }
+  else dre.categories.push({nome:CAT_RETIRADA, entraDRE:false, grupo:CAT_RETIRADA});
+}
 
 let loja = 'vivashop';
 let dre = { categories: defaultCategoryObjects(), expenses: [], monthlyManual: {} };
@@ -1086,7 +1215,7 @@ const today = new Date();
 let despesasLedgerFiltro = 'hoje'; // 'hoje' (só o que já venceu) ou 'mes-todo' (inclui despesas futuras) — só afeta a visão da carta "Despesas do mês", não os KPIs/DRE
 let editingId = null;
 let editingEntradaId = null;
-let editingRetiradaId = null;
+let caixaMovsVisiveis = [];
 let chartInstances = {};
 let graficosFiltroAno = null;
 let metaRoasYear = today.getFullYear();
@@ -1218,9 +1347,41 @@ function exportarDre3CSV(){
   linha('Média diária Ads no mês', dataPerMonth.map(x=>csvNumero(x.d.mediaDiariaAds)));
   linha('Margem/Gasto', dataPerMonth.map(x=>isFinite(x.d.margemGasto) ? csvNumero(x.d.margemGasto)+'x' : ''));
   linha('ROAS Caixa', dataPerMonth.map(x=>isFinite(x.d.roasCaixa) ? csvNumero(x.d.roasCaixa)+'x' : ''));
+  rows.push([]);
+  linha('Retiradas do proprietário (fora do DRE)', dataPerMonth.map(x=>csvNumero(x.d.retiradasMes)));
 
   const nomeArquivo = `DRE_${loja}_${MESES_ABREV[months[0].m]}${months[0].y}_a_${MESES_ABREV[months[2].m]}${months[2].y}.csv`;
   downloadCSV(nomeArquivo, rows);
+}
+function exportarCaixaCSV(){
+  const movs = [...caixaMovsVisiveis].sort((a,b)=>a.data.localeCompare(b.data));
+  const rows = [['Data','Tipo','Descrição','Entrada','Saída']];
+  movs.forEach(mv=>{
+    const [y,m,dd] = mv.data.split('-');
+    const isEntrada = mv.tipo==='Entrada';
+    rows.push([`${dd}/${m}/${y}`, mv.tipo, mv.descricao||'', isEntrada ? csvNumero(Number(mv.valor)) : '', isEntrada ? '' : csvNumero(Number(mv.valor))]);
+  });
+  const totE = movs.filter(x=>x.tipo==='Entrada').reduce((a,b)=>a+Number(b.valor),0);
+  const totS = movs.filter(x=>x.tipo!=='Entrada').reduce((a,b)=>a+Number(b.valor),0);
+  rows.push([]);
+  rows.push(['Total','','',csvNumero(totE),csvNumero(totS)]);
+  downloadCSV(`Caixa_movimentacoes_${loja}.csv`, rows);
+  showToast('Movimentações exportadas.');
+}
+function exportarCaixaMensalCSV(){
+  const abreEm = caixa.abertura && caixa.abertura.data ? caixa.abertura.data : null;
+  const abreEmKey = abreEm ? abreEm.slice(0,7) : null;
+  let saldo = caixa.abertura ? Number(caixa.abertura.saldoInicial)||0 : 0;
+  const rows = [['Mês','Entradas','Despesas','Retiradas','Resultado do mês','Saldo acumulado']];
+  getAllMonthsRange().filter(mo=>!abreEmKey || monthKey(mo.y,mo.m)>=abreEmKey).forEach(mo=>{
+    const d = computeDRE(mo.y,mo.m);
+    const despesas = d.totalTodasCategorias - d.retiradasMes;
+    const resultado = d.entradasMes - d.totalTodasCategorias;
+    saldo += resultado;
+    rows.push([`${MESES_ABREV[mo.m]}/${mo.y}`, csvNumero(d.entradasMes), csvNumero(despesas), csvNumero(d.retiradasMes), csvNumero(resultado), csvNumero(saldo)]);
+  });
+  downloadCSV(`Caixa_resumo_mensal_${loja}.csv`, rows);
+  showToast('Resumo mensal exportado.');
 }
 function exportarDespesasCSV(){
   const filtroMes = document.getElementById('filtroMes').value;
@@ -1273,7 +1434,7 @@ if(typeof Chart !== 'undefined'){
           ctx.lineWidth = 3;
           ctx.strokeStyle = 'rgba(255,255,255,0.85)';
           ctx.strokeText(label, pos.x, pos.y + dy);
-          ctx.fillStyle = '#1C2A3B';
+          ctx.fillStyle = '#0B2A40';
           ctx.fillText(label, pos.x, pos.y + dy);
           ctx.restore();
         });
@@ -1298,13 +1459,33 @@ async function loadStore(){
     if(typeof dre.categories[0] === 'string') dre.categories = dre.categories.map(nome=>({nome, entraDRE:true}));
     dre.categories.forEach(c=>{ if(!c.grupo) c.grupo = defaultGrupoForCategoria(c.nome); });
     if(!dre.categories.some(c=>c.nome==='Juros de Antecipação')) dre.categories.push({nome:'Juros de Antecipação', entraDRE:true, grupo:'Juros de Antecipação'});
+    if(!dre.expenses) dre.expenses = [];
+    if(!dre.monthlyManual) dre.monthlyManual = {};
+    ensureRetiradaCategory();
   }catch(e){ dre = { categories: defaultCategoryObjects(), expenses: [], monthlyManual: {} }; }
   try{
     const r2 = await window.storage.get(`caixa_data_${loja}`);
     caixa = r2 ? JSON.parse(r2.value) : { entradas: [], retiradas: [], saldoBanco: { valor:0, atualizadoEm:null }, abertura: { data:null, saldoInicial:0 } };
     if(!caixa.abertura) caixa.abertura = { data:null, saldoInicial:0 };
     if(!caixa.entradaTipos || !caixa.entradaTipos.length) caixa.entradaTipos = ['Repasse Reserva Ink'];
+    if(!caixa.entradas) caixa.entradas = [];
+    if(!caixa.saldoBanco) caixa.saldoBanco = { valor:0, atualizadoEm:null };
   }catch(e){ caixa = { entradas: [], retiradas: [], saldoBanco: { valor:0, atualizadoEm:null }, abertura: { data:null, saldoInicial:0 }, entradaTipos: ['Repasse Reserva Ink'] }; }
+  await migrarRetiradasAntigas();
+}
+// Retiradas lançadas na versão antiga (caixa.retiradas) viram despesas da categoria "Retirada".
+// Idempotente: depois de migrar, caixa.retiradas fica vazio.
+async function migrarRetiradasAntigas(){
+  const antigas = Array.isArray(caixa.retiradas) ? caixa.retiradas : [];
+  caixa.retiradas = [];
+  if(!antigas.length) return;
+  antigas.forEach(r=>{
+    const id = r.id || uid();
+    if(dre.expenses.some(e=>e.id===id)) return;
+    dre.expenses.push({ id, serieId:null, categoria:CAT_RETIRADA, data:r.data, valor:Number(r.valor)||0, descricao:r.descricao||'', createdAt:Date.now() });
+  });
+  await saveDre();
+  await saveCaixa();
 }
 async function saveDre(){
   try{ await window.storage.set(`dre_data_${loja}`, JSON.stringify(dre)); }
@@ -1402,11 +1583,9 @@ function computeDRE(y,m){
   const mediaDiariaAds = divisorDias>0 ? facebookGasto/divisorDias : 0;
   const margemGasto = facebookGasto>0 ? manual.lucroBruto/facebookGasto : NaN;
   const entradasMes = caixa.entradas.filter(e=>{ const d=new Date(e.data+'T00:00:00'); return d.getFullYear()===y && d.getMonth()===m; }).reduce((a,b)=>a+Number(b.valor),0);
-  // Retiradas do proprietário no mês — puramente informativo. Vem de caixa.retiradas
-  // (estrutura separada de dre.expenses de propósito: retirada de sócio é saída de
-  // caixa real, mas não é custo operacional do negócio, então nunca entra em
-  // "custos"/totalTodasCategorias nem afeta lucroLiquido/roi/roas acima).
-  const retiradasMes = caixa.retiradas.filter(e=>{ const d=new Date(e.data+'T00:00:00'); return d.getFullYear()===y && d.getMonth()===m; }).reduce((a,b)=>a+Number(b.valor),0);
+  // Retiradas do proprietário no mês: despesas da categoria especial "Retirada" (entraDRE=false).
+  // Saem do caixa (estão em totalTodasCategorias) mas ficam fora de "custos" e do lucro/ROI/ROAS.
+  const retiradasMes = byCat[CAT_RETIRADA] || 0;
   const roasCaixa = facebookGasto>0 ? entradasMes/facebookGasto : NaN;
   const resultadoCaixaMes = entradasMes - totalTodasCategorias;
   const custoProdutos = manual.faturamento - manual.lucroBruto;
@@ -1436,7 +1615,7 @@ function getGroupTotals(y,m){
 function aggregateGroupTotals(monthsList){
   const totals = {};
   GRUPOS_DRE3.forEach(g=>totals[g]=0);
-  let vendasRealizadas=0, itensVendidos=0, faturamento=0, lucroBruto=0, facebookGasto=0, entradasMes=0, custos=0, totalTodasCategorias=0, diasSomados=0;
+  let vendasRealizadas=0, itensVendidos=0, faturamento=0, lucroBruto=0, facebookGasto=0, entradasMes=0, custos=0, totalTodasCategorias=0, diasSomados=0, retiradasMes=0;
   monthsList.forEach(mo=>{
     const { totals: t, d } = getGroupTotals(mo.y, mo.m);
     GRUPOS_DRE3.forEach(g=>{ totals[g] += t[g]; });
@@ -1446,6 +1625,7 @@ function aggregateGroupTotals(monthsList){
     lucroBruto += d.manual.lucroBruto;
     facebookGasto += d.facebookGasto;
     entradasMes += d.entradasMes;
+    retiradasMes += d.retiradasMes;
     custos += d.custos;
     totalTodasCategorias += d.totalTodasCategorias;
     const isCurrentMonth = (mo.y===today.getFullYear() && mo.m===today.getMonth());
@@ -1460,7 +1640,7 @@ function aggregateGroupTotals(monthsList){
   const roasCaixa = facebookGasto>0 ? entradasMes/facebookGasto : NaN;
   const mediaDiariaAds = diasSomados>0 ? facebookGasto/diasSomados : 0;
   const custosTotal = GRUPOS_DRE3.reduce((a,g)=>a+totals[g],0);
-  const d = { manual: { vendasRealizadas, itensVendidos, faturamento, lucroBruto }, pctLucroBruto, lucroLiquido, roi, roas, mediaDiariaAds, margemGasto, roasCaixa };
+  const d = { manual: { vendasRealizadas, itensVendidos, faturamento, lucroBruto }, pctLucroBruto, lucroLiquido, roi, roas, mediaDiariaAds, margemGasto, roasCaixa, retiradasMes };
   return { totals, d, custosTotal };
 }
 
@@ -1545,6 +1725,9 @@ function renderDre3Meses(){
   ).join('') + '</tr>';
   html += `<tr class="dre3-spacer"><td colspan="${colspan}"></td></tr>`;
   linhasResultado.forEach(l=>{ html += linhaHtml(l); });
+  html += `<tr class="dre3-spacer"><td colspan="${colspan}"></td></tr>`;
+  html += `<tr class="dre3-fora-header"><td colspan="${colspan}">Fora do DRE <span style="font-weight:400; text-transform:none;">(sai do caixa, não reduz o lucro)</span></td></tr>`;
+  html += '<tr class="dre3-fora"><td>Retiradas do proprietário</td>' + dataPerMonth.map(x=>`<td class="num${extraColClass(x)}">${fmtBRL(x.d.retiradasMes)}</td>`).join('') + '</tr>';
   html += '</tbody></table>';
   document.getElementById('dre3Table').innerHTML = html;
 
@@ -1575,11 +1758,13 @@ function saldoCaixaAcumulado(ateY, ateM){
   const corteDataStr = temCorte ? `${ateY}-${pad(ateM+1)}-${pad(corteLastDay)}` : null;
   const beforeCutoff = (dataStr) => !temCorte || dataStr <= corteDataStr;
   const totalEntradas = caixa.entradas.filter(e=>afterOpening(e.data) && beforeCutoff(e.data)).reduce((a,b)=>a+Number(b.valor),0);
-  const totalRetiradas = caixa.retiradas.filter(e=>afterOpening(e.data) && beforeCutoff(e.data)).reduce((a,b)=>a+Number(b.valor),0);
-  const totalDespesasPagas = getAllMonthsRange()
+  const mesesCalc = getAllMonthsRange()
     .filter(mo=> !abreEmKey || monthKey(mo.y,mo.m) >= abreEmKey)
     .filter(mo=> !temCorte || monthKey(mo.y,mo.m) <= corteKey)
-    .reduce((a,mo)=>a+computeDRE(mo.y,mo.m).totalTodasCategorias, 0);
+    .map(mo=>computeDRE(mo.y,mo.m));
+  // retiradas são despesas da categoria "Retirada": saem do caixa mas são mostradas à parte
+  const totalRetiradas = mesesCalc.reduce((a,d)=>a+d.retiradasMes, 0);
+  const totalDespesasPagas = mesesCalc.reduce((a,d)=>a+d.totalTodasCategorias, 0) - totalRetiradas;
   return { saldo: saldoInicial + totalEntradas - totalDespesasPagas - totalRetiradas, totalEntradas, totalDespesasPagas, totalRetiradas, saldoInicial };
 }
 let caixaAcumuladoDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -1696,8 +1881,9 @@ function renderPainel(){
   if(catsDRE.length===0 && catsFora.length===0){
     ledger.innerHTML = `<div class="empty">Nenhuma despesa ${incluirFuturas ? 'lançada' : 'vencida'} neste mês ainda.</div>`;
   } else {
+    const pBar = (v) => totalGeralDespesas>0 ? Math.max(0, Math.min(100, (v/totalGeralDespesas)*100)).toFixed(1) : 0;
     let html = catsDRE.map(c=>`
-      <div class="ledger-row">
+      <div class="ledger-row" style="--p:${pBar(byCatLedger[c.nome])}%;">
         <span class="name">${c.nome}${byCatLedger[c.nome]<0 ? ' <span style="font-size:11px; color:var(--positive);">(crédito)</span>' : ''}</span><span class="leader"></span>
         <span class="pct">${pct(byCatLedger[c.nome])}</span>
         <span class="amt" style="${byCatLedger[c.nome]<0?'color:var(--positive);':''}">${fmtBRL(byCatLedger[c.nome])}</span>
@@ -1709,8 +1895,8 @@ function renderPainel(){
       </div>`;
     if(catsFora.length){
       html += catsFora.map(c=>`
-        <div class="ledger-row sub">
-          <span class="name">${c.nome} <span style="font-size:11px;">(fora do DRE)</span></span><span class="leader"></span>
+        <div class="ledger-row sub" style="--p:${pBar(byCatLedger[c.nome])}%;">
+          <span class="name">${c.nome===CAT_RETIRADA ? 'Retiradas do proprietário' : c.nome} <span style="font-size:11px;">(fora do DRE)</span></span><span class="leader"></span>
           <span class="pct">${pct(byCatLedger[c.nome])}</span>
           <span class="amt">${fmtBRL(byCatLedger[c.nome])}</span>
         </div>`).join('');
@@ -1736,8 +1922,8 @@ function renderPainel(){
     <div class="mini"><div class="label">Margem / gasto (lucro bruto ÷ Facebook)</div><div class="value">${fmtX(d.margemGasto)}</div></div>
     <div class="mini"><div class="label">Entradas de caixa no mês</div><div class="value">${fmtBRL(d.entradasMes)}</div></div>
     <div class="mini"><div class="label">ROAS caixa (entradas ÷ Facebook)</div><div class="value">${fmtX(d.roasCaixa)}</div></div>
-    <div class="mini"><div class="label">Resultado de caixa no mês (entradas − despesas)</div><div class="value" style="color:${d.resultadoCaixaMes>=0?'var(--positive)':'var(--negative)'};">${fmtBRL(d.resultadoCaixaMes)}</div></div>
-    <div class="mini"><div class="label">Retiradas do proprietário no mês <span style="font-size:10.5px;">(fora do DRE — não afeta lucro)</span></div><div class="value">${fmtBRL(d.retiradasMes)}</div></div>
+    <div class="mini"><div class="label">Resultado de caixa no mês (entradas − despesas e retiradas)</div><div class="value" style="color:${d.resultadoCaixaMes>=0?'var(--positive)':'var(--negative)'};">${fmtBRL(d.resultadoCaixaMes)}</div></div>
+    <div class="mini"><div class="label">Retiradas do proprietário no mês <span style="font-size:10.5px;">(fora do DRE, não reduz o lucro)</span></div><div class="value">${fmtBRL(d.retiradasMes)}</div></div>
   `;
 
   const custoMedioGrid = document.getElementById('custoMedioGrid');
@@ -1771,8 +1957,12 @@ function bindManualInputNullable(id, field){
 
 /* ---------------- rendering: despesas ---------------- */
 function populateCategorySelects(){
-  const opts = dre.categories.map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('') + `<option value="__nova__">+ nova categoria…</option>`;
-  document.getElementById('despCategoria').innerHTML = opts;
+  const optDre = dre.categories.filter(c=>c.entraDRE).map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');
+  const optFora = dre.categories.filter(c=>!c.entraDRE).map(c=>`<option value="${c.nome}">${c.nome==='Retirada' ? 'Retirada (saída de caixa, fora do DRE)' : c.nome+' (fora do DRE)'}</option>`).join('');
+  const prevCat = document.getElementById('despCategoria').value;
+  document.getElementById('despCategoria').innerHTML = optDre + (optFora ? `<optgroup label="Fora do DRE">${optFora}</optgroup>` : '') + `<option value="__nova__">+ nova categoria…</option>`;
+  if(prevCat && dre.categories.some(c=>c.nome===prevCat)) document.getElementById('despCategoria').value = prevCat;
+  updateRetiradaHint();
 
   const filtroCat = document.getElementById('filtroCategoria');
   filtroCat.innerHTML = `<option value="">Todas</option>` + dre.categories.map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');
@@ -1795,6 +1985,32 @@ function populateMonthFilter(){
     const [y,m] = k.split('-');
     return `<option value="${k}">${MESES[parseInt(m)-1]} de ${y}</option>`;
   }).join('');
+}
+
+function irParaAba(page){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+page));
+  window.scrollTo({top:0});
+}
+function startEditDespesa(id){
+  const exp = dre.expenses.find(e=>e.id===id);
+  if(!exp) return;
+  editingId = exp.id;
+  document.getElementById('despCategoria').value = exp.categoria;
+  document.getElementById('despData').value = exp.data;
+  document.getElementById('despValor').value = exp.valor;
+  document.getElementById('despDescricao').value = exp.descricao || '';
+  document.getElementById('despRecorrente').closest('.checkline').style.display = 'none';
+  document.getElementById('despMesesBox').style.display = 'none';
+  document.getElementById('despSalvar').textContent = 'Salvar alteração';
+  document.getElementById('despCancelarEdicao').style.display = 'inline-flex';
+  irParaAba('despesas');
+  updateRetiradaHint();
+  document.getElementById('despCategoria').scrollIntoView({behavior:'smooth', block:'center'});
+}
+function updateRetiradaHint(){
+  const el = document.getElementById('despRetiradaHint');
+  if(el) el.style.display = document.getElementById('despCategoria').value===CAT_RETIRADA ? 'block' : 'none';
 }
 
 function renderDespesasList(){
@@ -1821,7 +2037,7 @@ function renderDespesasList(){
     const [y,m,dd] = e.data.split('-');
     return `<tr>
       <td>${dd}/${m}/${y}</td>
-      <td>${e.categoria}${e.descricao ? ` <span style="color:var(--muted);">— ${e.descricao}</span>` : ''}${e.serieId ? ' <span style="color:var(--muted); font-size:11px;">(recorrente)</span>' : ''}</td>
+      <td>${e.categoria===CAT_RETIRADA ? '<span class="tag-retirada">Retirada · fora do DRE</span>' : e.categoria}${e.descricao ? ` <span style="color:var(--muted);">— ${e.descricao}</span>` : ''}${e.serieId ? ' <span style="color:var(--muted); font-size:11px;">(recorrente)</span>' : ''}</td>
       <td class="num">${fmtBRL(e.valor)}</td>
       <td><span class="pill ${considerado?'sim':'nao'}">${considerado?'Sim':'Não'}</span></td>
       <td>
@@ -1834,24 +2050,7 @@ function renderDespesasList(){
   }).join('');
 
   tbody.querySelectorAll('[data-edit]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const exp = dre.expenses.find(e=>e.id===btn.dataset.edit);
-      if(!exp) return;
-      editingId = exp.id;
-      document.getElementById('despCategoria').value = exp.categoria;
-      document.getElementById('despData').value = exp.data;
-      document.getElementById('despValor').value = exp.valor;
-      document.getElementById('despDescricao').value = exp.descricao || '';
-      document.getElementById('despRecorrente').closest('.checkline').style.display = 'none';
-      document.getElementById('despMesesBox').style.display = 'none';
-      document.getElementById('despSalvar').textContent = 'Salvar alteração';
-      document.getElementById('despCancelarEdicao').style.display = 'inline-flex';
-      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
-      document.querySelector('nav.tabs button[data-page="despesas"]').classList.add('active');
-      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-      document.getElementById('page-despesas').classList.add('active');
-      document.getElementById('despCategoria').scrollIntoView({behavior:'smooth', block:'center'});
-    });
+    btn.addEventListener('click', ()=> startEditDespesa(btn.dataset.edit));
   });
   tbody.querySelectorAll('[data-dup]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1862,6 +2061,7 @@ function renderDespesasList(){
       document.getElementById('despData').value = exp.data;
       document.getElementById('despValor').value = exp.valor;
       document.getElementById('despDescricao').value = exp.descricao || '';
+      updateRetiradaHint();
       document.getElementById('despCategoria').scrollIntoView({behavior:'smooth', block:'center'});
       showToast('Despesa duplicada no formulário — ajusta e salva.');
     });
@@ -1936,8 +2136,8 @@ function renderCaixa(){
     .filter(e=>isConsiderado(e));
   const allMovs = [
     ...caixa.entradas.filter(e=>afterOpening(e.data)).map(e=>({...e, tipo:'Entrada', descricao: e.categoria ? (e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria) : (e.descricao||'')})),
-    ...caixa.retiradas.filter(e=>afterOpening(e.data)).map(e=>({...e, tipo:'Retirada'})),
-    ...dre.expenses.filter(e=>e.categoria!=='Taxa Zoop' && e.categoria!=='Juros de Antecipação' && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
+    ...dre.expenses.filter(e=>e.categoria===CAT_RETIRADA && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Retirada', descricao: e.descricao || 'Retirada do proprietário'})),
+    ...dre.expenses.filter(e=>e.categoria!=='Taxa Zoop' && e.categoria!=='Juros de Antecipação' && e.categoria!==CAT_RETIRADA && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
     ...dre.expenses.filter(e=>e.categoria==='Taxa Zoop' && getTaxaZoopManual((new Date(e.data+'T00:00:00')).getFullYear(), (new Date(e.data+'T00:00:00')).getMonth())===null && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
     ...dre.expenses.filter(e=>e.categoria==='Juros de Antecipação' && getJurosAntecipacaoManual((new Date(e.data+'T00:00:00')).getFullYear(), (new Date(e.data+'T00:00:00')).getMonth())===null && isConsiderado(e) && afterOpening(e.data)).map(e=>({...e, tipo:'Despesa', descricao: e.descricao ? `${e.categoria} — ${e.descricao}` : e.categoria, valorNeg:true})),
     ...taxaZoopVirtuais,
@@ -1961,6 +2161,7 @@ function renderCaixa(){
     return true;
   });
 
+  caixaMovsVisiveis = movs;
   const tbody = document.querySelector('#caixaTable tbody');
   const empty = document.getElementById('caixaEmpty');
   if(movs.length===0){
@@ -1984,34 +2185,24 @@ function renderCaixa(){
     tbody.querySelectorAll('[data-caixaedit]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const id = btn.dataset.caixaedit, tipo = btn.dataset.caixaedittipo;
-        const item = (tipo==='Entrada' ? caixa.entradas : caixa.retiradas).find(x=>x.id===id);
+        if(tipo==='Retirada'){ startEditDespesa(id); return; } // retirada é uma despesa da categoria "Retirada"
+        const item = caixa.entradas.find(x=>x.id===id);
         if(!item) return;
-        if(tipo==='Entrada'){
-          editingEntradaId = id;
-          document.getElementById('entradaCategoria').value = item.categoria || '';
-          document.getElementById('entradaData').value = item.data;
-          document.getElementById('entradaValor').value = item.valor;
-          document.getElementById('entradaDesc').value = item.descricao || '';
-          document.getElementById('entradaSalvar').textContent = 'Salvar alteração';
-          document.getElementById('entradaCancelarEdicao').style.display = 'inline-flex';
-          document.getElementById('entradaCategoria').scrollIntoView({behavior:'smooth', block:'center'});
-        } else {
-          editingRetiradaId = id;
-          document.getElementById('retiradaData').value = item.data;
-          document.getElementById('retiradaValor').value = item.valor;
-          document.getElementById('retiradaDesc').value = item.descricao || '';
-          document.getElementById('retiradaSalvar').textContent = 'Salvar alteração';
-          document.getElementById('retiradaCancelarEdicao').style.display = 'inline-flex';
-          document.getElementById('retiradaData').scrollIntoView({behavior:'smooth', block:'center'});
-        }
+        editingEntradaId = id;
+        document.getElementById('entradaCategoria').value = item.categoria || '';
+        document.getElementById('entradaData').value = item.data;
+        document.getElementById('entradaValor').value = item.valor;
+        document.getElementById('entradaDesc').value = item.descricao || '';
+        document.getElementById('entradaSalvar').textContent = 'Salvar alteração';
+        document.getElementById('entradaCancelarEdicao').style.display = 'inline-flex';
+        document.getElementById('entradaCategoria').scrollIntoView({behavior:'smooth', block:'center'});
       });
     });
     tbody.querySelectorAll('[data-caixadel]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const id = btn.dataset.caixadel, tipo = btn.dataset.caixatipo;
-        if(tipo==='Entrada') caixa.entradas = caixa.entradas.filter(e=>e.id!==id);
-        else caixa.retiradas = caixa.retiradas.filter(e=>e.id!==id);
-        await saveCaixa();
+        if(tipo==='Entrada'){ caixa.entradas = caixa.entradas.filter(e=>e.id!==id); await saveCaixa(); }
+        else { dre.expenses = dre.expenses.filter(e=>e.id!==id); await saveDre(); }
         renderAll();
         showToast('Movimentação excluída.');
       });
@@ -2024,6 +2215,13 @@ function renderCategorias(){
   const list = document.getElementById('catList');
   list.innerHTML = `<tr><th style="text-align:left; padding:0 10px 8px; font-size:11.5px; color:var(--muted); border-bottom:1px solid var(--line);">Categoria</th><th style="text-align:left; padding:0 10px 8px; font-size:11.5px; color:var(--muted); border-bottom:1px solid var(--line);">No resultado do DRE</th><th style="text-align:left; padding:0 10px 8px; font-size:11.5px; color:var(--muted); border-bottom:1px solid var(--line);">Linha no DRE de 3 meses</th><th style="border-bottom:1px solid var(--line);"></th></tr>` + dre.categories.map(c=>{
     const emUso = dre.expenses.some(e=>e.categoria===c.nome);
+    if(c.nome===CAT_RETIRADA){
+      return `<tr>
+      <td>${c.nome} <span class="tag-retirada">especial</span></td>
+      <td colspan="2" style="font-size:13px; color:var(--muted);">Sempre fora do DRE · aparece numa linha própria no DRE de 3 meses e no Painel do mês</td>
+      <td></td>
+    </tr>`;
+    }
     return `<tr>
       <td>${c.nome}</td>
       <td>
@@ -2073,10 +2271,10 @@ function renderPainelCharts(){
   const labels = months.map(mo=>`${MESES_ABREV[mo.m]}/${String(mo.y).slice(2)}`);
   const computed = months.map(mo=>computeDRE(mo.y,mo.m));
 
-  const colAccent = css('--accent') || '#1F6FEB';
-  const colNegative = css('--negative') || '#A63A2E';
-  const colLine = css('--line') || '#E7E5DF';
-  const colMuted = css('--muted') || '#5C6066';
+  const colAccent = css('--accent') || '#094C75';
+  const colNegative = css('--negative') || '#B01515';
+  const colLine = css('--line') || '#EAD9A9';
+  const colMuted = css('--muted') || '#7A6A4F';
   Chart.defaults.font.family = "'Archivo', sans-serif";
   Chart.defaults.color = colMuted;
 
@@ -2113,12 +2311,11 @@ function aggregatePeriodo(months, computed){
     return monthSet.has(monthKey(d.getFullYear(), d.getMonth()));
   };
   const totalEntradas = caixa.entradas.filter(e=>afterOpening(e.data) && inPeriod(e.data)).reduce((a,b)=>a+Number(b.valor),0);
-  const totalRetiradas = caixa.retiradas.filter(e=>afterOpening(e.data) && inPeriod(e.data)).reduce((a,b)=>a+Number(b.valor),0);
   const totalDespesasCaixa = months.reduce((a,mo,i)=>{
     if(abreEmKey && monthKey(mo.y,mo.m) < abreEmKey) return a;
     return a + computed[i].totalTodasCategorias;
   }, 0);
-  const saldoPeriodo = totalEntradas - totalDespesasCaixa - totalRetiradas;
+  const saldoPeriodo = totalEntradas - totalDespesasCaixa; // totalDespesasCaixa já inclui as retiradas
 
   return { faturamento, lucroBruto, custos, lucroLiquido, roi, roas, saldoPeriodo, facebookGasto };
 }
@@ -2172,12 +2369,12 @@ function renderGraficos(){
 
   renderMetaRoasButtons();
 
-  const colAccent = css('--accent') || '#1F6FEB';
-  const colInk = css('--ink') || '#16181A';
-  const colPositive = css('--positive') || '#2F6B4F';
-  const colNegative = css('--negative') || '#A63A2E';
-  const colMuted = css('--muted') || '#5C6066';
-  const colLine = css('--line') || '#E7E5DF';
+  const colAccent = css('--accent') || '#094C75';
+  const colInk = '#EBA940'; // mostarda VivaShop (2ª série dos gráficos)
+  const colPositive = css('--positive') || '#165733';
+  const colNegative = css('--negative') || '#B01515';
+  const colMuted = css('--muted') || '#7A6A4F';
+  const colLine = css('--line') || '#EAD9A9';
 
   Chart.defaults.font.family = "'Archivo', sans-serif";
   Chart.defaults.color = colMuted;
@@ -2265,8 +2462,9 @@ function renderPizza(months){
       byCat[e.categoria] = (byCat[e.categoria]||0) + Number(e.valor);
     }
   });
+  delete byCat[CAT_RETIRADA]; // retirada do proprietário não é despesa operacional
   const entries = Object.entries(byCat).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-  const pieColors = ['#1F6FEB','#4C8EF0','#7AACF5','#0F52B8','#A8C7F8','#1554B8','#3C7FE0','#8FB8FF','#0D3D82','#B8D2FB','#2A63C4','#CFE1FD','#16181A','#F5F4F0'];
+  const pieColors = ['#094C75','#EBA940','#963417','#165733','#ADD2DA','#B01515','#69934F','#0B2A40','#F2C98A','#C9743F','#2B7A8C','#B8A33E','#D98A7A','#6B8FA8'];
   if(chartInstances.pizza){ chartInstances.pizza.destroy(); delete chartInstances.pizza; }
   const totalPeriodo = entries.reduce((a,[,v])=>a+v,0);
   const periodoLabel = graficosFiltroAno===null ? 'todo o histórico' : String(graficosFiltroAno);
@@ -2476,7 +2674,7 @@ async function renderVendasDia(){
 let vgYear = new Date().getFullYear();
 let vgMonth = new Date().getMonth();
 let vgAnoTodo = false;
-const pieColorsVg = ['#1F6FEB','#4C8EF0','#7AACF5','#0F52B8','#A8C7F8','#1554B8','#3C7FE0','#8FB8FF','#0D3D82','#B8D2FB','#2A63C4','#CFE1FD','#16181A','#F5F4F0'];
+const pieColorsVg = ['#094C75','#EBA940','#963417','#165733','#ADD2DA','#B01515','#69934F','#0B2A40','#F2C98A','#C9743F','#2B7A8C','#B8A33E','#D98A7A','#6B8FA8'];
 function destroyChart(id){ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
 
 // Independente do filtro de ano do Painel/DRE (que só olha os meses com despesa
@@ -2552,8 +2750,8 @@ async function renderVendasGeral(){
     chartInstances.vgVendasItens = new Chart(document.getElementById('chartVgVendasItens'), {
       type:'line',
       data:{ labels: diasOrdenados.map(d=>fmtDataBR(d.data)), datasets:[
-        {label:'Vendas', data: diasOrdenados.map(d=>d.vendas), borderColor:'#8B3A62', backgroundColor:'rgba(139,58,98,.12)', tension:.3, fill:true},
-        {label:'Itens', data: diasOrdenados.map(d=>d.itens), borderColor:'#6C3FA6', backgroundColor:'rgba(108,63,166,.12)', tension:.3, fill:true},
+        {label:'Vendas', data: diasOrdenados.map(d=>d.vendas), borderColor:'#963417', backgroundColor:'rgba(150,52,23,.14)', tension:.3, fill:true},
+        {label:'Itens', data: diasOrdenados.map(d=>d.itens), borderColor:'#094C75', backgroundColor:'rgba(9,76,117,.12)', tension:.3, fill:true},
       ]},
       options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} }
     });
@@ -2569,7 +2767,7 @@ async function renderVendasGeral(){
       data:{ labels: agg.porCor.map(e=>e.label), datasets:[{data: agg.porCor.map(e=>e.valor), backgroundColor: agg.porCor.map((_,i)=>pieColorsVg[i%pieColorsVg.length])}]}, options:pieOpts });
     destroyChart('vgDiaSemana');
     chartInstances.vgDiaSemana = new Chart(document.getElementById('chartVgDiaSemana'), { type:'bar',
-      data:{ labels: agg.porDiaSemana.map(d=>d.label.slice(0,3)), datasets:[{data: agg.porDiaSemana.map(d=>d.valor), backgroundColor:'#B23A6B'}] },
+      data:{ labels: agg.porDiaSemana.map(d=>d.label.slice(0,3)), datasets:[{data: agg.porDiaSemana.map(d=>d.valor), backgroundColor:'#EBA940'}] },
       options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } });
 
     const tbodyCupons = document.querySelector('#vgTabelaCupons tbody');
@@ -2723,6 +2921,7 @@ document.querySelectorAll('#despesasLedgerFiltro button').forEach(btn=>{
 /* ---------------- events: despesas ---------------- */
 document.getElementById('despCategoria').addEventListener('change', (e)=>{
   document.getElementById('newcatBox').style.display = e.target.value==='__nova__' ? 'flex' : 'none';
+  updateRetiradaHint();
 });
 document.getElementById('newcatConfirm').addEventListener('click', async ()=>{
   const val = document.getElementById('newcatInput').value.trim();
@@ -2805,14 +3004,6 @@ function resetEntradaForm(){
   document.getElementById('entradaValor').value = '';
   document.getElementById('entradaDesc').value = '';
 }
-function resetRetiradaForm(){
-  editingRetiradaId = null;
-  document.getElementById('retiradaSalvar').textContent = 'Lançar retirada';
-  document.getElementById('retiradaCancelarEdicao').style.display = 'none';
-  document.getElementById('retiradaValor').value = '';
-  document.getElementById('retiradaDesc').value = '';
-}
-
 document.getElementById('entradaCategoria').addEventListener('change', (e)=>{
   document.getElementById('entradaNewcatBox').style.display = e.target.value==='__nova__' ? 'flex' : 'none';
 });
@@ -2851,27 +3042,15 @@ document.getElementById('entradaSalvar').addEventListener('click', async ()=>{
 });
 document.getElementById('entradaCancelarEdicao').addEventListener('click', resetEntradaForm);
 
-document.getElementById('retiradaSalvar').addEventListener('click', async ()=>{
-  const data = document.getElementById('retiradaData').value;
-  const valor = parseFloat(document.getElementById('retiradaValor').value);
-  const descricao = document.getElementById('retiradaDesc').value.trim();
-  if(!data || isNaN(valor)){ showToast('Preenche data e valor.'); return; }
-  if(editingRetiradaId){
-    const item = caixa.retiradas.find(e=>e.id===editingRetiradaId);
-    if(item){ item.data = data; item.valor = valor; item.descricao = descricao; }
-    await saveCaixa();
-    resetRetiradaForm();
-    renderAll();
-    showToast('Retirada atualizada.');
-    return;
-  }
-  caixa.retiradas.push({ id: uid(), data, valor, descricao });
-  await saveCaixa();
-  resetRetiradaForm();
-  renderAll();
-  showToast('Retirada lançada.');
+document.getElementById('btnIrRetirada').addEventListener('click', ()=>{
+  resetDespesaForm();
+  irParaAba('despesas');
+  document.getElementById('despCategoria').value = CAT_RETIRADA;
+  updateRetiradaHint();
+  document.getElementById('despValor').focus();
 });
-document.getElementById('retiradaCancelarEdicao').addEventListener('click', resetRetiradaForm);
+document.getElementById('btnExportarCaixa').addEventListener('click', exportarCaixaCSV);
+document.getElementById('btnExportarCaixaMensal').addEventListener('click', exportarCaixaMensalCSV);
 document.getElementById('caixaFiltroTipo').addEventListener('change', renderCaixa);
 document.getElementById('caixaFiltroMes').addEventListener('change', renderCaixa);
 document.getElementById('inAberturaData').addEventListener('change', async (e)=>{
@@ -2969,7 +3148,6 @@ document.getElementById('btnImportar').addEventListener('click', async ()=>{
   const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
   document.getElementById('despData').value = todayStr;
   document.getElementById('entradaData').value = todayStr;
-  document.getElementById('retiradaData').value = todayStr;
   await loadStore();
   renderAll();
 })();
@@ -2987,13 +3165,13 @@ document.getElementById('btnImportar').addEventListener('click', async ()=>{
     document.getElementById('app').style.display = 'none';
     const gate = document.createElement('div');
     gate.id = 'accessGate';
-    gate.style.cssText = 'position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#F5F4F0; font-family:Archivo,sans-serif; z-index:999;';
+    gate.style.cssText = 'position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#094C75; font-family:Archivo,sans-serif; z-index:999;';
     gate.innerHTML = `
-      <form id="accessForm" style="background:#FFFFFF; padding:32px; border-radius:14px; box-shadow:0 4px 24px rgba(20,22,24,.12); text-align:center; max-width:320px; width:90%;">
-        <h2 style="margin:0 0 6px; font-family:Newsreader,serif; color:#16181A;">Painel DRE</h2>
-        <p style="color:#5C6066; font-size:13.5px; margin:0 0 18px;">Digite a chave de acesso pra continuar.</p>
-        <input id="accessInput" type="password" placeholder="Chave de acesso" style="width:100%; padding:10px 12px; margin-bottom:14px; border:1px solid #E7E5DF; border-radius:8px; box-sizing:border-box; font-size:14px;">
-        <button type="submit" style="width:100%; padding:10px; background:#16181A; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Entrar</button>
+      <form id="accessForm" style="background:#FBEDC8; padding:32px; border-radius:22px; box-shadow:0 6px 0 #0B2A40; text-align:center; max-width:320px; width:90%;">
+        <h2 style="margin:0 0 6px; font-family:Anton,sans-serif; color:#094C75; font-weight:400; text-transform:uppercase; letter-spacing:.04em; font-size:30px;">Painel DRE</h2>
+        <p style="color:#7A6A4F; font-size:13.5px; margin:0 0 18px;">Digite a chave de acesso pra continuar.</p>
+        <input id="accessInput" type="password" placeholder="Chave de acesso" style="width:100%; padding:10px 12px; margin-bottom:14px; border:1.5px solid #EAD9A9; border-radius:10px; box-sizing:border-box; font-size:14px;">
+        <button type="submit" style="width:100%; padding:11px; background:#094C75; color:#FBEDC8; border:none; border-radius:24px; box-shadow:0 3px 0 #0B2A40; cursor:pointer; font-weight:600;">Entrar</button>
       </form>`;
     document.body.appendChild(gate);
     document.getElementById('accessForm').addEventListener('submit', (e)=>{
