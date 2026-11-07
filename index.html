@@ -554,6 +554,24 @@ table.list th{color:var(--terra); text-transform:uppercase; letter-spacing:.06em
 .reconcile-diff.ok{background:var(--positive-soft); color:var(--positive);}
 .reconcile-diff.off{background:var(--negative-soft); color:var(--negative);}
 a{color:var(--blue);}
+
+/* ---- Marketing ---- */
+.kpi-tile .kpi-sub{font-size:11.5px; color:var(--muted); margin-top:4px;}
+.mkt-badge{display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 6px; border-radius:50%; color:#fff; font-size:12px; font-weight:700; font-family:'Archivo',sans-serif; vertical-align:middle;}
+.mkt-tipo{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:20px; border:1.5px solid; white-space:nowrap;}
+.mkt-destaques{background:var(--cream); border:1.5px dashed var(--mustard); border-radius:14px; padding:12px 16px; margin-bottom:8px; font-size:13.5px; line-height:1.6; color:var(--ink-soft);}
+.mkt-legenda{display:flex; flex-wrap:wrap; gap:8px 22px; margin:14px 4px 0; font-size:13px;}
+.mkt-leg-item{display:flex; align-items:center; gap:7px;}
+.mkt-comp-card{margin-bottom:14px; padding:16px 22px;}
+.mkt-comp-head{font-size:14.5px; margin-bottom:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.mkt-aviso{font-size:12.5px; color:var(--terra); background:rgba(150,52,23,.08); border-radius:8px; padding:6px 10px; margin-bottom:8px;}
+
+.mkt-top{width:100%;}
+.mkt-top td{padding:9px 10px;}
+.mkt-rank{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--cream); color:var(--terra); font-weight:700; font-size:12px; border:1.5px solid var(--mustard);}
+.mkt-top tr:nth-child(-n+3) .mkt-rank{background:var(--mustard); color:var(--ink);}
+.mkt-bar{height:5px; border-radius:3px; background:var(--line-soft); margin-top:5px; overflow:hidden;}
+.mkt-bar span{display:block; height:100%; background:var(--mustard); border-radius:3px;}
 </style>
 </head>
 <body>
@@ -580,6 +598,9 @@ a{color:var(--blue);}
       <div class="nav-group-label">Vendas</div>
       <button data-page="vendas-dia"><span class="dot"></span>Vendas por dia</button>
       <button data-page="vendas-geral"><span class="dot"></span>Visão geral</button>
+
+      <div class="nav-group-label">Marketing</div>
+      <button data-page="marketing"><span class="dot"></span>Marketing</button>
     </nav>
     <div class="foot">Os dados ficam salvos neste artifact, por loja, e continuam aqui na próxima vez que você abrir.</div>
   </div>
@@ -974,6 +995,68 @@ a{color:var(--blue);}
     </div>
 
     <!-- VENDAS POR DIA -->
+    <!-- MARKETING -->
+    <div class="page" id="page-marketing">
+      <h2 class="serif" style="margin-bottom:6px;">Marketing</h2>
+      <p style="color:var(--muted); font-size:13.5px; margin-top:0; margin-bottom:18px; max-width:620px;">Curva de vendas e itens por dia, com as mudanças que você fez (troca de criativo, campanha, orçamento…) marcadas nos gráficos. As vendas vêm da Reserva Ink; o gasto é o Facebook lançado na aba Despesas.</p>
+
+      <div class="filtro-botoes">
+        <div class="btn-group" id="mktAnoButtons"></div>
+        <div class="btn-group" id="mktMesButtons"></div>
+      </div>
+      <div class="btn-group" id="mktAtalhos" style="margin-bottom:14px;"></div>
+      <div class="periodo-filter">
+        <div class="field-row"><label>De</label><input type="date" id="mktDataIni"></div>
+        <span class="sep">até</span>
+        <div class="field-row"><label></label><input type="date" id="mktDataFim"></div>
+        <button class="btn secondary" id="mktAplicar">Aplicar período</button>
+        <button class="btn" id="mktBtnPdf">Baixar relatório PDF</button>
+      </div>
+      <div id="mktStatus" style="font-size:13px; color:var(--muted); margin-bottom:14px;"></div>
+
+      <div class="kpi-grid" id="mktKpis"></div>
+      <div class="mkt-destaques" id="mktDestaques"></div>
+
+      <div class="section-title">Vendas e itens por dia <span class="hint">linhas numeradas = mudanças marcadas</span></div>
+      <div class="card"><div style="position:relative; height:320px;"><canvas id="chartMktVendas"></canvas></div></div>
+
+      <div class="section-title">Faturamento por dia x gasto Facebook <span class="hint">gasto na data em que foi lançado em Despesas</span></div>
+      <div class="card"><div style="position:relative; height:320px;"><canvas id="chartMktFat"></canvas></div></div>
+      <div class="mkt-legenda" id="mktLegenda"></div>
+
+      <div class="section-title">Top 10 estampas mais vendidas <span class="hint">por itens vendidos, no período filtrado</span></div>
+      <div class="card" id="mktTopEstampas"></div>
+
+      <div class="section-title">Antes x depois de cada mudança
+        <span class="section-actions"><span class="hint">comparar</span><span class="btn-group" id="mktJanelaBtns"></span></span>
+      </div>
+      <p style="color:var(--muted); font-size:12.5px; margin:-4px 0 12px;">Antes = os dias anteriores à data marcada. Depois = a data marcada e os dias seguintes (só dias já encerrados). Médias por dia, pra períodos de tamanhos diferentes ficarem comparáveis.</p>
+      <div id="mktComparativo"></div>
+
+      <div class="section-title">Marcar mudança <span class="hint">vira uma linha numerada nos gráficos e no PDF</span></div>
+      <div class="card">
+        <div class="grid-2">
+          <div class="field-row"><label>Data da mudança</label><input type="date" id="mktEvData"></div>
+          <div class="field-row"><label>Tipo</label><select id="mktEvTipo"></select></div>
+        </div>
+        <div class="field-row"><label>O que mudou</label><input type="text" id="mktEvTitulo" placeholder="Ex: novo vídeo de depoimento no conjunto Brasil"></div>
+        <div class="field-row" style="margin-bottom:0;"><label>Observação (opcional)</label><input type="text" id="mktEvNota" placeholder="Ex: orçamento diário mantido em R$ 50"></div>
+        <button class="btn" style="margin-top:16px;" id="mktEvSalvar">Marcar no gráfico</button>
+        <button class="btn secondary" id="mktEvCancelar" style="display:none; margin-top:16px; margin-left:8px;">Cancelar edição</button>
+      </div>
+
+      <div class="section-title">Mudanças marcadas</div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div style="max-height:360px; overflow-y:auto; padding:8px 22px;">
+          <table class="list" id="mktEventosTable">
+            <thead><tr><th>Nº</th><th>Data</th><th>Tipo</th><th>O que mudou</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="empty" id="mktEventosEmpty" style="display:none;">Nenhuma mudança marcada ainda.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-vendas-dia">
       <h2 class="serif" style="margin-bottom:6px;">Vendas por dia</h2>
       <p style="color:var(--muted); font-size:13.5px; margin-top:0; margin-bottom:18px;">Movimento diário e ranking de produtos mais vendidos, vindo da Reserva Ink.</p>
@@ -2670,6 +2753,711 @@ async function renderVendasDia(){
   }
 }
 
+/* ---------------- Marketing ---------------- */
+// Marcações de mudança (criativo, campanha, orçamento…) ficam em dre.eventosMarketing
+// (junto do resto dos dados da loja, então exportar/importar já leva elas junto).
+const MKT_TIPOS = {
+  criativo:  { label:'Troca de criativo',        cor:'#963417' },
+  campanha:  { label:'Nova campanha / público',  cor:'#094C75' },
+  orcamento: { label:'Mudança de orçamento',     cor:'#165733' },
+  promo:     { label:'Promoção / cupom',         cor:'#B01515' },
+  outro:     { label:'Outro',                    cor:'#7A6A4F' },
+};
+const DIAS_SEMANA_ABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+let mktIni = null, mktFim = null;
+let mktSel = { tipo:'mes', y: today.getFullYear(), m: today.getMonth() };
+let mktJanela = 7;
+let mktCache = null;
+let mktReq = 0;
+let editingEventoId = null;
+
+function localISO(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function mktHojeISO(){ return localISO(new Date()); }
+function addDaysISO(iso, n){
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m-1, d+n)).toISOString().slice(0,10);
+}
+function diasEntre(ini, fim){
+  const out = []; let d = ini, guard = 0;
+  while(d <= fim && guard < 800){ out.push(d); d = addDaysISO(d,1); guard++; }
+  return out;
+}
+const _fmtDiaBR = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit' });
+// Dia da venda no horário de Brasília (a Reserva Ink devolve created_at em UTC).
+function diaBR(createdAt){
+  if(!createdAt) return '';
+  const dt = new Date(createdAt);
+  if(isNaN(dt)) return String(createdAt).slice(0,10);
+  return _fmtDiaBR.format(dt);
+}
+function diaSemanaISO(iso){ const [y,m,d] = iso.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)).getUTCDay(); }
+function fmtDiaMes(iso){ return iso.slice(8) + '/' + iso.slice(5,7); }
+function mktEventos(){ if(!Array.isArray(dre.eventosMarketing)) dre.eventosMarketing = []; return dre.eventosMarketing; }
+function mktEventosNoPeriodo(){
+  return mktEventos().filter(e=>e.data>=mktIni && e.data<=mktFim)
+    .sort((a,b)=> a.data.localeCompare(b.data) || String(a.id).localeCompare(String(b.id)));
+}
+function mktNumeroDoEvento(id){
+  const i = mktEventosNoPeriodo().findIndex(e=>e.id===id);
+  return i>=0 ? i+1 : null;
+}
+function escHtml(t){ return String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const fmtNum1 = (v) => isFinite(v) ? v.toLocaleString('pt-BR',{maximumFractionDigits:1}) : '—';
+
+/* --- período --- */
+function mktAplicarSelecao(sel){
+  const hoje = mktHojeISO();
+  mktSel = sel;
+  if(sel.tipo==='mes'){
+    const ini = `${sel.y}-${pad(sel.m+1)}-01`;
+    const ult = new Date(sel.y, sel.m+1, 0).getDate();
+    const fimMes = `${sel.y}-${pad(sel.m+1)}-${pad(ult)}`;
+    mktFim = fimMes > hoje ? hoje : fimMes;     // mês em andamento vai só até hoje
+    mktIni = ini > mktFim ? mktFim : ini;
+  } else if(sel.tipo==='dias'){
+    mktFim = hoje; mktIni = addDaysISO(hoje, -(sel.n-1));
+  }
+  document.getElementById('mktDataIni').value = mktIni;
+  document.getElementById('mktDataFim').value = mktFim;
+}
+function renderMktFiltro(){
+  const hoje = mktHojeISO();
+  const anos = getVendasYearsRange();
+  const selY = mktSel.tipo==='mes' ? mktSel.y : null;
+  const anoBox = document.getElementById('mktAnoButtons');
+  anoBox.innerHTML = anos.map(y=>`<button data-ano="${y}" class="${y===selY?'active':''}">${y}</button>`).join('');
+  anoBox.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const y = parseInt(btn.dataset.ano);
+      const m = (mktSel.tipo==='mes') ? mktSel.m : today.getMonth();
+      mktAplicarSelecao({tipo:'mes', y, m: (y===today.getFullYear() && m>today.getMonth()) ? today.getMonth() : m});
+      renderMarketing();
+    });
+  });
+  const mesBox = document.getElementById('mktMesButtons');
+  const yy = mktSel.tipo==='mes' ? mktSel.y : today.getFullYear();
+  mesBox.innerHTML = MESES_ABREV.map((label,i)=>{
+    const futuro = `${yy}-${pad(i+1)}-01` > hoje;
+    const ativo = mktSel.tipo==='mes' && mktSel.m===i;
+    return `<button data-mes="${i}" class="${ativo?'active':''}" ${futuro?'disabled style="opacity:.35; cursor:not-allowed;"':''}>${label}</button>`;
+  }).join('');
+  mesBox.querySelectorAll('button:not([disabled])').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ mktAplicarSelecao({tipo:'mes', y: yy, m: parseInt(btn.dataset.mes)}); renderMarketing(); });
+  });
+  const atalhos = [{n:7,label:'Últimos 7 dias'},{n:14,label:'Últimos 14 dias'},{n:30,label:'Últimos 30 dias'}];
+  const atBox = document.getElementById('mktAtalhos');
+  atBox.innerHTML = atalhos.map(a=>`<button data-n="${a.n}" class="${mktSel.tipo==='dias' && mktSel.n===a.n ? 'active':''}">${a.label}</button>`).join('');
+  atBox.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ mktAplicarSelecao({tipo:'dias', n: parseInt(btn.dataset.n)}); renderMarketing(); });
+  });
+  const jBox = document.getElementById('mktJanelaBtns');
+  jBox.innerHTML = [3,7,14].map(n=>`<button data-j="${n}" class="${mktJanela===n?'active':''}">${n} dias</button>`).join('');
+  jBox.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ mktJanela = parseInt(btn.dataset.j); renderMarketing(); });
+  });
+}
+
+/* --- dados --- */
+async function mktCarregar(){
+  const token = ++mktReq;
+  const hoje = mktHojeISO();
+  const temEventos = mktEventosNoPeriodo().length > 0;
+  const ext = temEventos ? mktJanela : 0;          // dias extras antes/depois pra comparar
+  const fIni = addDaysISO(mktIni, -ext);
+  let fFim = addDaysISO(mktFim, ext); if(fFim > hoje) fFim = hoje;
+  const key = `${loja}|${fIni}|${fFim}`;
+  if(!mktCache || mktCache.key !== key){
+    const orders = await fetchOrdersReservaInk(addDaysISO(fIni,-1), addDaysISO(fFim,1));
+    if(token !== mktReq) return null;
+    const validos = (orders||[]).filter(pedidoContaComoVenda).map(o=>({ o, dia: diaBR(o.created_at) })).filter(x=>x.dia>=fIni && x.dia<=fFim);
+    const diaMap = {};
+    validos.forEach(({o,dia})=>{
+      const x = diaMap[dia] || (diaMap[dia] = {vendas:0, itens:0, fat:0, lucro:0});
+      x.vendas += 1;
+      x.itens += (o.items||[]).reduce((a,it)=>a+(Number(it.quantity)||0), 0);
+      x.fat += parseFloat(o.total_value)||0;
+      x.lucro += parseFloat(o.kickback_value)||0;
+    });
+    mktCache = { key, fIni, fFim, diaMap, pedidos: validos };
+  }
+  if(token !== mktReq) return null;
+  return mktCache;
+}
+function mktFbMap(){
+  const m = {};
+  dre.expenses.forEach(e=>{ if(e.categoria==='Facebook' && isConsiderado(e)) m[e.data] = (m[e.data]||0) + Number(e.valor); });
+  return m;
+}
+function mktDia(cache, fb, d){
+  const x = cache.diaMap[d] || {vendas:0, itens:0, fat:0, lucro:0};
+  return { data:d, vendas:x.vendas, itens:x.itens, fat:x.fat, lucro:x.lucro, fb: fb[d]||0 };
+}
+function mktSoma(cache, fb, dias){
+  const t = { dias: dias.length, vendas:0, itens:0, fat:0, lucro:0, fb:0 };
+  dias.forEach(d=>{ const x = mktDia(cache, fb, d); t.vendas+=x.vendas; t.itens+=x.itens; t.fat+=x.fat; t.lucro+=x.lucro; t.fb+=x.fb; });
+  return t;
+}
+function mktMontar(cache){
+  const fb = mktFbMap();
+  const dias = diasEntre(mktIni, mktFim);
+  const serie = dias.map(d=>mktDia(cache, fb, d));
+  const tot = mktSoma(cache, fb, dias);
+  tot.ticket = tot.vendas>0 ? tot.fat/tot.vendas : NaN;
+  tot.roas = tot.fb>0 ? tot.fat/tot.fb : NaN;
+  tot.custoVenda = tot.vendas>0 && tot.fb>0 ? tot.fb/tot.vendas : NaN;
+  tot.vendasDia = tot.dias>0 ? tot.vendas/tot.dias : NaN;
+  const eventos = mktEventosNoPeriodo();
+  const marks = eventos.map((e,i)=>({ index: serie.findIndex(d=>d.data===e.data), num:i+1, cor:(MKT_TIPOS[e.tipo]||MKT_TIPOS.outro).cor }));
+  return { fb, serie, tot, eventos, marks, destaques: mktDestaques(serie) };
+}
+function mktDestaques(serie){
+  const out = [];
+  if(!serie.length || serie.every(d=>d.vendas===0)) return out;
+  const melhor = serie.reduce((a,d)=> d.vendas>a.vendas ? d : a, serie[0]);
+  out.push(`Melhor dia: ${fmtDataBR(melhor.data)} (${DIAS_SEMANA_ABREV[diaSemanaISO(melhor.data)]}) com ${melhor.vendas} ${melhor.vendas===1?'venda':'vendas'} e ${melhor.itens} ${melhor.itens===1?'item':'itens'}.`);
+  if(serie.length >= 14){
+    const soma = Array(7).fill(0), cont = Array(7).fill(0);
+    serie.forEach(d=>{ const w = diaSemanaISO(d.data); soma[w]+=d.vendas; cont[w]+=1; });
+    const medias = soma.map((s,i)=> cont[i]>0 ? s/cont[i] : -1);
+    const wMax = medias.indexOf(Math.max(...medias));
+    out.push(`Dia da semana mais forte: ${DIAS_SEMANA_ABREV[wMax]} (média de ${fmtNum1(medias[wMax])} vendas por ${DIAS_SEMANA_ABREV[wMax].toLowerCase()}).`);
+  }
+  if(serie.length >= 6){
+    const meio = Math.floor(serie.length/2);
+    const a = serie.slice(0,meio), b = serie.slice(meio);
+    const ma = a.reduce((s,d)=>s+d.vendas,0)/a.length, mb = b.reduce((s,d)=>s+d.vendas,0)/b.length;
+    if(ma>0){
+      const v = (mb-ma)/ma*100;
+      out.push(`Tendência: na 2ª metade do período vendeu ${fmtNum1(mb)}/dia contra ${fmtNum1(ma)}/dia na 1ª (${v>=0?'+':''}${fmtNum1(v)}%).`);
+    }
+  }
+  return out;
+}
+const MKT_LINHAS = [
+  { k:'Vendas por dia',        get:t=> t.vendas/t.dias,           fmt:fmtNum1,        alto:true  },
+  { k:'Itens por dia',         get:t=> t.itens/t.dias,            fmt:fmtNum1,        alto:true  },
+  { k:'Faturamento por dia',   get:t=> t.fat/t.dias,              fmt:fmtBRL,         alto:true  },
+  { k:'Lucro bruto por dia',   get:t=> t.lucro/t.dias,            fmt:fmtBRL,         alto:true  },
+  { k:'Gasto Facebook por dia',get:t=> t.fb/t.dias,               fmt:fmtBRL,         alto:false, neutro:true },
+  { k:'ROAS',                  get:t=> t.fb>0 ? t.fat/t.fb : NaN, fmt:fmtX,           alto:true  },
+  { k:'Custo por venda (Facebook)', get:t=> (t.fb>0 && t.vendas>0) ? t.fb/t.vendas : NaN, fmt:fmtBRL, alto:false },
+];
+function mktComparar(cache, fb, ev){
+  const ontem = addDaysISO(mktHojeISO(), -1);
+  const N = mktJanela;
+  const antesDias = diasEntre(addDaysISO(ev.data, -N), addDaysISO(ev.data, -1));
+  let fimDepois = addDaysISO(ev.data, N-1); if(fimDepois > ontem) fimDepois = ontem;
+  const depoisDias = diasEntre(ev.data, fimDepois);
+  const A = mktSoma(cache, fb, antesDias), D = mktSoma(cache, fb, depoisDias);
+  const linhas = MKT_LINHAS.map(l=>{
+    const a = A.dias>0 ? l.get(A) : NaN, d = D.dias>0 ? l.get(D) : NaN;
+    const delta = (isFinite(a) && isFinite(d) && a!==0) ? (d-a)/Math.abs(a)*100 : NaN;
+    let bom = null;
+    if(isFinite(delta) && Math.abs(delta) >= 0.5 && !l.neutro) bom = l.alto ? delta>0 : delta<0;
+    return { k:l.k, a, d, delta, bom, fmt:l.fmt };
+  });
+  return { diasAntes:A.dias, diasDepois:D.dias, linhas };
+}
+const fmtDelta = (v) => isFinite(v) ? `${v>=0?'+':''}${v.toLocaleString('pt-BR',{maximumFractionDigits:1})}%` : '—';
+
+/* --- gráficos --- */
+// Linha tracejada numerada em cada data marcada (mesmo plugin pra tela e pro PDF).
+const mktMarkersPlugin = {
+  id:'mktMarkers',
+  afterDatasetsDraw(chart, args, opts){
+    const marks = (opts && opts.marks) || [];
+    if(!marks.length) return;
+    const xs = chart.scales.x, a = chart.chartArea, ctx = chart.ctx;
+    marks.forEach(mk=>{
+      if(mk.index < 0) return;
+      const px = xs.getPixelForValue(mk.index);
+      ctx.save();
+      ctx.strokeStyle = mk.cor; ctx.lineWidth = 2; ctx.setLineDash([5,4]);
+      ctx.beginPath(); ctx.moveTo(px, a.top-2); ctx.lineTo(px, a.bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      const r = 10;
+      ctx.fillStyle = mk.cor; ctx.beginPath(); ctx.arc(px, a.top-r-2, r, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FFFFFF'; ctx.font = "700 12px Archivo, Arial, sans-serif";
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(mk.num), px, a.top-r-1.5);
+      ctx.restore();
+    });
+  }
+};
+const mktBgPlugin = { id:'mktBg', beforeDraw(chart){ const c = chart.ctx; c.save(); c.fillStyle = '#FFFFFF'; c.fillRect(0,0,chart.width,chart.height); c.restore(); } };
+function mktChartConfig(kind, serie, marks, pdf){
+  const labels = serie.map(d=>fmtDiaMes(d.data));
+  const noLbl = ()=>'';
+  const azul='#094C75', mostarda='#EBA940', terra='#963417';
+  const pr = pdf ? 1.6 : 2.6;
+  let datasets;
+  if(kind==='vendas'){
+    const mm = serie.map((_,i)=>{ const sl = serie.slice(Math.max(0,i-6), i+1); return sl.reduce((a,d)=>a+d.vendas,0)/sl.length; });
+    datasets = [
+      { label:'Vendas', data:serie.map(d=>d.vendas), borderColor:azul, backgroundColor:azul, borderWidth:2.5, pointRadius:pr, tension:.25, _labelFormatter:noLbl },
+      { label:'Itens',  data:serie.map(d=>d.itens),  borderColor:mostarda, backgroundColor:mostarda, borderWidth:2.5, pointRadius:pr, tension:.25, _labelFormatter:noLbl },
+    ];
+    if(serie.length >= 10) datasets.push({ label:'Média móvel 7 dias (vendas)', data:mm, borderColor:terra, backgroundColor:terra, borderWidth:2, borderDash:[6,4], pointRadius:0, tension:.3, _labelFormatter:noLbl });
+  } else {
+    datasets = [
+      { type:'bar',  label:'Faturamento (R$)',  data:serie.map(d=>d.fat), backgroundColor:'rgba(235,169,64,.85)', borderRadius:3, _labelFormatter:noLbl, order:2 },
+      { type:'line', label:'Gasto Facebook (R$)', data:serie.map(d=>d.fb),  borderColor:azul, backgroundColor:azul, borderWidth:2.5, pointRadius:pr, tension:.25, _labelFormatter:noLbl, order:1 },
+    ];
+  }
+  return {
+    type: kind==='vendas' ? 'line' : 'bar',
+    data: { labels, datasets },
+    plugins: pdf ? [mktMarkersPlugin, mktBgPlugin] : [mktMarkersPlugin],
+    options: {
+      responsive: !pdf, maintainAspectRatio:false, animation:false,
+      devicePixelRatio: pdf ? 2 : undefined,
+      layout:{ padding:{ top:28 } },
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ usePointStyle:true, boxWidth:8 } }, mktMarkers:{ marks } },
+      scales:{
+        x:{ grid:{ display:false }, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit: pdf?14:12 } },
+        y:{ beginAtZero:true, ticks: kind==='vendas' ? { precision:0 } : {} }
+      }
+    }
+  };
+}
+function mktDesenharGraficos(D){
+  if(typeof Chart === 'undefined') return;
+  destroyChart('mktVendas'); destroyChart('mktFat');
+  chartInstances.mktVendas = new Chart(document.getElementById('chartMktVendas'), mktChartConfig('vendas', D.serie, D.marks, false));
+  chartInstances.mktFat = new Chart(document.getElementById('chartMktFat'), mktChartConfig('fat', D.serie, D.marks, false));
+}
+
+/* --- renderização --- */
+function mktBadge(num, cor){ return `<span class="mkt-badge" style="background:${cor};">${num}</span>`; }
+function renderMktEventosLista(){
+  const tbody = document.querySelector('#mktEventosTable tbody');
+  const empty = document.getElementById('mktEventosEmpty');
+  const lista = [...mktEventos()].sort((a,b)=> b.data.localeCompare(a.data));
+  if(!lista.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = lista.map(e=>{
+    const t = MKT_TIPOS[e.tipo] || MKT_TIPOS.outro;
+    const num = mktNumeroDoEvento(e.id);
+    return `<tr>
+      <td>${num ? mktBadge(num, t.cor) : '<span style="color:var(--muted);">—</span>'}</td>
+      <td>${fmtDataBR(e.data)}</td>
+      <td><span class="mkt-tipo" style="color:${t.cor}; border-color:${t.cor};">${t.label}</span></td>
+      <td>${escHtml(e.titulo)}${e.nota ? ` <span style="color:var(--muted);">— ${escHtml(e.nota)}</span>` : ''}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn secondary" data-evedit="${e.id}" style="padding:6px 10px; font-size:12px;">editar</button>
+        <button class="btn danger" data-evdel="${e.id}" style="margin-left:6px;">excluir</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-evedit]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const ev = mktEventos().find(x=>x.id===btn.dataset.evedit); if(!ev) return;
+      editingEventoId = ev.id;
+      document.getElementById('mktEvData').value = ev.data;
+      document.getElementById('mktEvTipo').value = ev.tipo;
+      document.getElementById('mktEvTitulo').value = ev.titulo;
+      document.getElementById('mktEvNota').value = ev.nota || '';
+      document.getElementById('mktEvSalvar').textContent = 'Salvar alteração';
+      document.getElementById('mktEvCancelar').style.display = 'inline-flex';
+      document.getElementById('mktEvTitulo').scrollIntoView({behavior:'smooth', block:'center'});
+    });
+  });
+  tbody.querySelectorAll('[data-evdel]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      dre.eventosMarketing = mktEventos().filter(x=>x.id!==btn.dataset.evdel);
+      await saveDre();
+      showToast('Marcação excluída.');
+      renderMarketing();
+    });
+  });
+}
+function mktResetEventoForm(){
+  editingEventoId = null;
+  document.getElementById('mktEvTitulo').value = '';
+  document.getElementById('mktEvNota').value = '';
+  document.getElementById('mktEvSalvar').textContent = 'Marcar no gráfico';
+  document.getElementById('mktEvCancelar').style.display = 'none';
+}
+function renderMktKpis(D){
+  const t = D.tot;
+  document.getElementById('mktKpis').innerHTML = `
+    <div class="kpi-tile"><div class="label">Vendas</div><div class="value">${t.vendas}</div><div class="kpi-sub">${fmtNum1(t.vendasDia)} por dia</div></div>
+    <div class="kpi-tile"><div class="label">Itens vendidos</div><div class="value">${t.itens}</div><div class="kpi-sub">${t.vendas>0 ? fmtNum1(t.itens/t.vendas) : '—'} por venda</div></div>
+    <div class="kpi-tile"><div class="label">Faturamento</div><div class="value">${fmtBRLShort(t.fat)}</div><div class="kpi-sub">ticket médio ${isFinite(t.ticket) ? fmtBRLShort(t.ticket) : '—'}</div></div>
+    <div class="kpi-tile"><div class="label">Lucro bruto</div><div class="value">${fmtBRLShort(t.lucro)}</div><div class="kpi-sub">${t.fat>0 ? fmtPct(t.lucro/t.fat) : '—'} do faturamento</div></div>
+    <div class="kpi-tile"><div class="label">Gasto Facebook</div><div class="value">${fmtBRLShort(t.fb)}</div><div class="kpi-sub">${t.dias>0 ? fmtBRLShort(t.fb/t.dias) : '—'} por dia</div></div>
+    <div class="kpi-tile"><div class="label">ROAS</div><div class="value">${fmtX(t.roas)}</div><div class="kpi-sub">faturamento ÷ Facebook</div></div>
+    <div class="kpi-tile"><div class="label">Custo por venda</div><div class="value">${isFinite(t.custoVenda) ? fmtBRL(t.custoVenda) : '—'}</div><div class="kpi-sub">Facebook ÷ vendas</div></div>
+    <div class="kpi-tile"><div class="label">Dias no período</div><div class="value">${t.dias}</div><div class="kpi-sub">${fmtDataBR(mktIni)} a ${fmtDataBR(mktFim)}</div></div>`;
+  const dest = document.getElementById('mktDestaques');
+  dest.innerHTML = D.destaques.length ? D.destaques.map(x=>`<div>${escHtml(x)}</div>`).join('') : '';
+  dest.style.display = D.destaques.length ? 'block' : 'none';
+}
+function renderMktLegenda(D){
+  const box = document.getElementById('mktLegenda');
+  box.innerHTML = D.eventos.length
+    ? D.eventos.map((e,i)=>{ const t = MKT_TIPOS[e.tipo]||MKT_TIPOS.outro; return `<div class="mkt-leg-item">${mktBadge(i+1,t.cor)} <b>${fmtDiaMes(e.data)}</b> ${t.label}: ${escHtml(e.titulo)}</div>`; }).join('')
+    : '<div class="mkt-leg-item" style="color:var(--muted);">Nenhuma mudança marcada neste período. Use "Marcar mudança" mais abaixo.</div>';
+}
+function renderMktComparativo(D, cache){
+  const box = document.getElementById('mktComparativo');
+  if(!D.eventos.length){ box.innerHTML = '<div class="card"><div class="empty" style="padding:22px 0;">Marque uma mudança dentro do período pra ver como ficaram as métricas antes e depois dela.</div></div>'; return; }
+  box.innerHTML = D.eventos.map((e,i)=>{
+    const t = MKT_TIPOS[e.tipo]||MKT_TIPOS.outro;
+    const c = mktComparar(cache, D.fb, e);
+    const aviso = c.diasDepois < mktJanela ? `<div class="mkt-aviso">Só ${c.diasDepois} ${c.diasDepois===1?'dia completo':'dias completos'} depois da mudança até agora${c.diasDepois===0?' — volte amanhã pra ver o efeito.':'; o resultado ainda pode mudar.'}</div>` : '';
+    const rows = c.linhas.map(l=>{
+      const cor = l.bom===null ? 'var(--muted)' : (l.bom ? 'var(--positive)' : 'var(--negative)');
+      const seta = !isFinite(l.delta) || Math.abs(l.delta)<0.5 ? '' : (l.delta>0 ? '▲ ' : '▼ ');
+      return `<tr><td>${l.k}</td><td class="num">${isFinite(l.a)?l.fmt(l.a):'—'}</td><td class="num">${isFinite(l.d)?l.fmt(l.d):'—'}</td><td class="num" style="color:${cor}; font-weight:600;">${seta}${fmtDelta(l.delta)}</td></tr>`;
+    }).join('');
+    return `<div class="card mkt-comp-card">
+      <div class="mkt-comp-head">${mktBadge(i+1,t.cor)} <b>${fmtDataBR(e.data)}</b> · ${t.label} — ${escHtml(e.titulo)}</div>
+      ${aviso}
+      <table class="list"><thead><tr><th>Métrica (média por dia)</th><th style="text-align:right;">Antes (${c.diasAntes} dias)</th><th style="text-align:right;">Depois (${c.diasDepois} ${c.diasDepois===1?'dia':'dias'})</th><th style="text-align:right;">Variação</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>`;
+  }).join('');
+}
+function mktTopEstampas(cache){
+  const pedidos = cache.pedidos.filter(x=>x.dia>=mktIni && x.dia<=mktFim).map(x=>x.o);
+  const agg = aggregateVendas(pedidos);
+  const totalItens = agg.totals.itensVendidos;
+  const lista = agg.melhoresEstampas.slice(0,10).map(r=>({ nome:r.nome, qtd:r.quantidade, pct: totalItens>0 ? r.quantidade/totalItens : NaN }));
+  const semNome = lista.length>0 && lista.every(r=>r.nome==='Sem nome');
+  return { lista, totalItens, semNome };
+}
+function renderMktTopEstampas(cache){
+  const box = document.getElementById('mktTopEstampas');
+  const T = mktTopEstampas(cache);
+  if(!T.lista.length){ box.innerHTML = '<div class="empty" style="padding:22px 0;">Sem vendas no período.</div>'; return; }
+  if(T.semNome){ box.innerHTML = '<div class="empty" style="padding:22px 0;">Os pedidos deste período vieram sem o nome da estampa, então não dá pra montar o ranking.</div>'; return; }
+  const maxQtd = T.lista[0].qtd;
+  box.innerHTML = `<table class="list mkt-top"><thead><tr><th>#</th><th>Estampa</th><th style="text-align:right;">Itens</th><th style="text-align:right;">% dos itens</th></tr></thead><tbody>` +
+    T.lista.map((r,i)=>`<tr>
+      <td><span class="mkt-rank">${i+1}</span></td>
+      <td><div>${escHtml(r.nome)}</div><div class="mkt-bar"><span style="width:${maxQtd>0 ? (r.qtd/maxQtd*100).toFixed(1) : 0}%;"></span></div></td>
+      <td class="num">${r.qtd}</td>
+      <td class="num">${isFinite(r.pct) ? fmtPct(r.pct) : '—'}</td>
+    </tr>`).join('') + '</tbody></table>';
+}
+function isMarketingActive(){ return document.getElementById('page-marketing').classList.contains('active'); }
+async function renderMarketing(){
+  const tipoSel = document.getElementById('mktEvTipo');
+  if(!tipoSel.options.length){ tipoSel.innerHTML = Object.entries(MKT_TIPOS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join(''); }
+  if(!document.getElementById('mktEvData').value) document.getElementById('mktEvData').value = mktHojeISO();
+  if(!mktIni) mktAplicarSelecao(mktSel);
+  renderMktFiltro();
+  renderMktEventosLista();
+  const statusEl = document.getElementById('mktStatus');
+  statusEl.textContent = 'Carregando…';
+  try{
+    const cache = await mktCarregar();
+    if(!cache) return;
+    const D = mktMontar(cache);
+    mktUltimo = { cache, D };
+    renderMktKpis(D);
+    renderMktLegenda(D);
+    renderMktTopEstampas(cache);
+    renderMktComparativo(D, cache);
+    mktDesenharGraficos(D);
+    statusEl.textContent = `${D.tot.vendas} vendas entre ${fmtDataBR(mktIni)} e ${fmtDataBR(mktFim)}`;
+  }catch(e){
+    statusEl.textContent = 'Erro ao buscar dados da Reserva Ink: ' + e.message;
+  }
+}
+let mktUltimo = null;
+
+/* --- PDF --- */
+function mktCarregarJsPdf(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  const urls = ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
+  const tenta = (i) => new Promise((resolve, reject)=>{
+    if(i >= urls.length){ reject(new Error('não consegui baixar a biblioteca de PDF (sem internet?)')); return; }
+    const s = document.createElement('script');
+    s.src = urls[i]; s.async = true;
+    s.onload = ()=> (window.jspdf && window.jspdf.jsPDF) ? resolve(window.jspdf.jsPDF) : tenta(i+1).then(resolve, reject);
+    s.onerror = ()=> tenta(i+1).then(resolve, reject);
+    document.head.appendChild(s);
+  });
+  return tenta(0);
+}
+function mktChartImagem(kind, D){
+  const canvas = document.createElement('canvas');
+  canvas.width = 800; canvas.height = 300;
+  const ch = new Chart(canvas, mktChartConfig(kind, D.serie, D.marks, true));
+  const url = canvas.toDataURL('image/jpeg', 0.92);
+  ch.destroy();
+  return url;
+}
+// jsPDF usa fonte padrão (Latin-1): tira espaços especiais e emojis do texto.
+const pdfTxt = (s) => String(s==null?'':s).replace(/[  ]/g,' ').replace(/[^ -ÿ]/g,'');
+function hexRgb(h){ const n = parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+
+async function mktGerarPdf(){
+  const btn = document.getElementById('mktBtnPdf');
+  const txt0 = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Gerando PDF…';
+  try{
+    if(!mktIni) mktAplicarSelecao(mktSel);
+    const cache = await mktCarregar();
+    if(!cache) return;
+    const jsPDF = await mktCarregarJsPdf();
+    const D = mktMontar(cache);
+    const doc = new jsPDF({ unit:'mm', format:'a4', compress:true });
+    const W=210, H=297, M=14, CW=182;
+    const AZUL=[9,76,117], MOST=[235,169,64], CREME=[251,237,200], TERRA=[150,52,23], INK=[11,42,64], MUTED=[122,106,79];
+    let y = 0;
+    const novaPagina = ()=>{ doc.addPage(); y = M+2; };
+    const garantir = (h)=>{ if(y+h > H-16) novaPagina(); };
+    const titulo = (t)=>{
+      garantir(16);
+      doc.setFillColor(...MOST); doc.rect(M, y-3.4, 3.6, 3.6, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...AZUL);
+      doc.text(pdfTxt(t).toUpperCase(), M+6, y); y += 6;
+    };
+    const paragrafo = (t, size=9.5, cor=INK, bold=false)=>{
+      doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(size); doc.setTextColor(...cor);
+      const linhas = doc.splitTextToSize(pdfTxt(t), CW);
+      linhas.forEach(l=>{ garantir(5); doc.text(l, M, y); y += size*0.42+1.2; });
+    };
+    const lojaNome = loja==='petnip' ? 'Petnip' : 'VivaShop';
+
+    // cabeçalho
+    doc.setFillColor(...AZUL); doc.rect(0,0,W,32,'F');
+    doc.setFillColor(...MOST); doc.rect(0,32,W,2.4,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...CREME);
+    doc.text('RELATÓRIO DE MARKETING', M, 15);
+    doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(173,210,218);
+    doc.text(pdfTxt(`${lojaNome}  |  Período: ${fmtDataBR(mktIni)} a ${fmtDataBR(mktFim)}`), M, 23);
+    doc.setFontSize(8.5);
+    const agora = new Date();
+    doc.text(pdfTxt(`Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`), W-M, 15, {align:'right'});
+    y = 44;
+
+    // KPIs
+    const t = D.tot;
+    const kpis = [
+      ['Vendas', String(t.vendas), `${fmtNum1(t.vendasDia)} por dia`],
+      ['Itens vendidos', String(t.itens), t.vendas>0 ? `${fmtNum1(t.itens/t.vendas)} por venda` : ''],
+      ['Faturamento', fmtBRLShort(t.fat), `ticket médio ${isFinite(t.ticket)?fmtBRLShort(t.ticket):'-'}`],
+      ['Lucro bruto', fmtBRLShort(t.lucro), t.fat>0 ? `${fmtPct(t.lucro/t.fat)} do faturamento` : ''],
+      ['Gasto Facebook', fmtBRLShort(t.fb), t.dias>0 ? `${fmtBRLShort(t.fb/t.dias)} por dia` : ''],
+      ['ROAS', fmtX(t.roas), 'faturamento / Facebook'],
+      ['Custo por venda', isFinite(t.custoVenda) ? fmtBRL(t.custoVenda) : '-', 'Facebook / vendas'],
+      ['Dias no período', String(t.dias), ''],
+    ];
+    const kw = (CW-3*4)/4, kh = 20;
+    kpis.forEach((k,i)=>{
+      const col = i%4, row = Math.floor(i/4);
+      const x = M + col*(kw+4), yy = y + row*(kh+4);
+      doc.setFillColor(...CREME); doc.roundedRect(x, yy, kw, kh, 2, 2, 'F');
+      doc.setFillColor(...(row===0 ? MOST : TERRA)); doc.rect(x, yy, 1.6, kh, 'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+      doc.text(pdfTxt(k[0]), x+4, yy+5.5);
+      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...AZUL);
+      doc.text(pdfTxt(k[1]), x+4, yy+12.5);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+      doc.text(pdfTxt(k[2]), x+4, yy+17.2);
+    });
+    y += 2*kh + 4 + 10;
+
+    // destaques
+    if(D.destaques.length){
+      titulo('Destaques do período');
+      D.destaques.forEach(d=> paragrafo('•  ' + d));
+      y += 3;
+    }
+
+    // marcações
+    titulo('Mudanças marcadas no período');
+    if(D.eventos.length){
+      D.eventos.forEach((e,i)=>{
+        const tp = MKT_TIPOS[e.tipo]||MKT_TIPOS.outro;
+        garantir(7);
+        doc.setFillColor(...hexRgb(tp.cor)); doc.circle(M+2.6, y-1.2, 2.6, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255);
+        doc.text(String(i+1), M+2.6, y+0.4, {align:'center'});
+        doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...INK);
+        const cabEv = pdfTxt(`${fmtDataBR(e.data)}  ${tp.label}`);
+        doc.text(cabEv, M+8, y);
+        const larg = doc.getTextWidth(cabEv);   // medido ainda em negrito
+        doc.setFont('helvetica','normal');
+        const resto = pdfTxt(`${e.titulo}${e.nota ? ' - '+e.nota : ''}`);
+        const linhas = doc.splitTextToSize(':  ' + resto, CW - 8 - larg - 1);
+        doc.text(linhas[0], M+8+larg+0.5, y);
+        y += 5.2;
+        for(let k=1;k<linhas.length;k++){ garantir(5); doc.text(linhas[k], M+8, y); y += 4.6; }
+      });
+    } else {
+      paragrafo('Nenhuma mudança marcada neste período.', 9.5, MUTED);
+    }
+    y += 4;
+
+    // gráficos
+    const imgH = CW*300/800;
+    garantir(imgH+14);
+    titulo('Vendas e itens por dia');
+    doc.addImage(mktChartImagem('vendas', D), 'JPEG', M, y, CW, imgH); y += imgH + 6;
+    garantir(imgH+14);
+    titulo('Faturamento por dia x gasto Facebook');
+    doc.addImage(mktChartImagem('fat', D), 'JPEG', M, y, CW, imgH); y += imgH + 4;
+    paragrafo('Gasto Facebook = valores lançados na aba Despesas, na data do lançamento. Vendas = pedidos pagos da Reserva Ink (sem trocas, reembolsos e pedidos não pagos), por dia no horário de Brasília.', 8, MUTED);
+    y += 4;
+
+    // antes x depois
+    if(D.eventos.length){
+      titulo(`Antes x depois de cada mudança (${mktJanela} dias)`);
+      paragrafo('Antes = dias anteriores à data marcada. Depois = a data marcada e os dias seguintes (só dias encerrados). Médias por dia.', 8, MUTED);
+      y += 1;
+      D.eventos.forEach((e,i)=>{
+        const tp = MKT_TIPOS[e.tipo]||MKT_TIPOS.outro;
+        const c = mktComparar(cache, D.fb, e);
+        garantir(8 + 6*(c.linhas.length+1) + 6);
+        doc.setFillColor(...hexRgb(tp.cor)); doc.circle(M+2.6, y-1.2, 2.6, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255);
+        doc.text(String(i+1), M+2.6, y+0.4, {align:'center'});
+        doc.setFontSize(9.5); doc.setTextColor(...INK);
+        const cab = doc.splitTextToSize(pdfTxt(`${fmtDataBR(e.data)}  ${tp.label}: ${e.titulo}`), CW-8)[0];
+        doc.text(cab, M+8, y); y += 4.5;
+        if(c.diasDepois < mktJanela){
+          doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(...TERRA);
+          doc.text(pdfTxt(`Só ${c.diasDepois} dia(s) completo(s) depois da mudança até agora; o resultado ainda pode mudar.`), M+8, y); y += 4.2;
+        }
+        const cols = [M, M+78, M+112, M+146], cw = [78,34,34,36];
+        doc.setFillColor(...AZUL); doc.rect(M, y-3.8, CW, 5.4, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...CREME);
+        doc.text('Métrica (média por dia)', cols[0]+2, y);
+        doc.text(`Antes (${c.diasAntes} dias)`, cols[1]+cw[1]-2, y, {align:'right'});
+        doc.text(`Depois (${c.diasDepois} dias)`, cols[2]+cw[2]-2, y, {align:'right'});
+        doc.text('Variação', cols[3]+cw[3]-2, y, {align:'right'});
+        y += 5.6;
+        c.linhas.forEach((l,li)=>{
+          if(li%2===0){ doc.setFillColor(253,248,232); doc.rect(M, y-3.8, CW, 5.4, 'F'); }
+          doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...INK);
+          doc.text(pdfTxt(l.k), cols[0]+2, y);
+          doc.text(pdfTxt(isFinite(l.a)?l.fmt(l.a):'-'), cols[1]+cw[1]-2, y, {align:'right'});
+          doc.text(pdfTxt(isFinite(l.d)?l.fmt(l.d):'-'), cols[2]+cw[2]-2, y, {align:'right'});
+          doc.setFont('helvetica','bold');
+          if(l.bom===null) doc.setTextColor(...MUTED); else if(l.bom) doc.setTextColor(22,87,51); else doc.setTextColor(176,21,21);
+          doc.text(pdfTxt(fmtDelta(l.delta)), cols[3]+cw[3]-2, y, {align:'right'});
+          y += 5.4;
+        });
+        y += 5;
+      });
+    }
+
+    // detalhe por dia
+    titulo('Detalhe por dia');
+    const colsD = [
+      { h:'Data', w:24, a:'left' }, { h:'Dia', w:14, a:'left' }, { h:'Vendas', w:18, a:'right' }, { h:'Itens', w:18, a:'right' },
+      { h:'Faturamento', w:32, a:'right' }, { h:'Gasto FB', w:28, a:'right' }, { h:'ROAS', w:18, a:'right' }, { h:'Marc.', w:30, a:'right' },
+    ];
+    const cabecalhoTabela = ()=>{
+      doc.setFillColor(...AZUL); doc.rect(M, y-3.8, CW, 5.4, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...CREME);
+      let x = M;
+      colsD.forEach(c=>{ doc.text(c.h, c.a==='right' ? x+c.w-2 : x+2, y, {align:c.a}); x += c.w; });
+      y += 5.6;
+    };
+    cabecalhoTabela();
+    D.serie.forEach((d,i)=>{
+      if(y > H-20){ novaPagina(); cabecalhoTabela(); }
+      if(i%2===0){ doc.setFillColor(253,248,232); doc.rect(M, y-3.8, CW, 5.4, 'F'); }
+      const marcas = D.eventos.map((e,k)=> e.data===d.data ? String(k+1) : null).filter(Boolean).join(', ');
+      const vals = [fmtDataBR(d.data), DIAS_SEMANA_ABREV[diaSemanaISO(d.data)], String(d.vendas), String(d.itens), fmtBRL(d.fat), d.fb>0 ? fmtBRL(d.fb) : '-', d.fb>0 ? fmtX(d.fat/d.fb) : '-', marcas];
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...INK);
+      let x = M;
+      colsD.forEach((c,ci)=>{ doc.text(pdfTxt(vals[ci]), c.a==='right' ? x+c.w-2 : x+2, y, {align:c.a}); x += c.w; });
+      y += 5.4;
+    });
+    // total
+    if(y > H-20){ novaPagina(); }
+    doc.setDrawColor(...AZUL); doc.setLineWidth(0.4); doc.line(M, y-3.6, M+CW, y-3.6);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...AZUL);
+    const totVals = ['Total','',String(t.vendas),String(t.itens),fmtBRL(t.fat),fmtBRL(t.fb),fmtX(t.roas),''];
+    let xx = M; colsD.forEach((c,ci)=>{ doc.text(pdfTxt(totVals[ci]), c.a==='right' ? xx+c.w-2 : xx+2, y, {align:c.a}); xx += c.w; });
+    y += 9;
+
+    // top 10 estampas mais vendidas
+    const T = mktTopEstampas(cache);
+    if(T.lista.length && !T.semNome){
+      garantir(14 + 6*Math.min(T.lista.length,10));
+      titulo('Top 10 estampas mais vendidas');
+      paragrafo('Por itens vendidos no período do relatório.', 8, MUTED);
+      doc.setFillColor(...AZUL); doc.rect(M, y-3.8, CW, 5.4, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...CREME);
+      doc.text('#', M+2, y); doc.text('Estampa', M+10, y);
+      doc.text('Itens', M+CW-34, y, {align:'right'}); doc.text('% dos itens', M+CW-2, y, {align:'right'});
+      y += 5.6;
+      const maxQ = T.lista[0].qtd;
+      T.lista.forEach((r,i)=>{
+        garantir(7);
+        if(i%2===0){ doc.setFillColor(253,248,232); doc.rect(M, y-3.8, CW, 5.4, 'F'); }
+        doc.setFillColor(...MOST); doc.rect(M+10, y+0.9, Math.max(0.5,(CW-60)*r.qtd/maxQ), 0.9, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...TERRA);
+        doc.text(String(i+1), M+2, y);
+        doc.setFont('helvetica','normal'); doc.setTextColor(...INK);
+        doc.text(doc.splitTextToSize(pdfTxt(r.nome), CW-60)[0], M+10, y-0.2);
+        doc.setFont('helvetica','bold');
+        doc.text(String(r.qtd), M+CW-34, y, {align:'right'});
+        doc.text(pdfTxt(isFinite(r.pct) ? fmtPct(r.pct) : '-'), M+CW-2, y, {align:'right'});
+        y += 6;
+      });
+    }
+
+    // rodapé
+    const nPag = doc.getNumberOfPages();
+    for(let p=1; p<=nPag; p++){
+      doc.setPage(p);
+      doc.setDrawColor(...MOST); doc.setLineWidth(0.6); doc.line(M, H-11, W-M, H-11);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+      doc.text(pdfTxt(`Painel DRE  |  ${lojaNome}  |  Relatório de marketing`), M, H-7);
+      doc.text(`Página ${p} de ${nPag}`, W-M, H-7, {align:'right'});
+    }
+    doc.save(`Relatorio_Marketing_${loja}_${mktIni}_a_${mktFim}.pdf`);
+    showToast('Relatório PDF gerado.');
+  }catch(e){
+    showToast('Não consegui gerar o PDF: ' + e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = txt0;
+  }
+}
+
+/* --- eventos (formulário) --- */
+document.getElementById('mktEvSalvar').addEventListener('click', async ()=>{
+  const data = document.getElementById('mktEvData').value;
+  const tipo = document.getElementById('mktEvTipo').value;
+  const titulo = document.getElementById('mktEvTitulo').value.trim();
+  const nota = document.getElementById('mktEvNota').value.trim();
+  if(!data){ showToast('Escolhe a data da mudança.'); return; }
+  if(!titulo){ showToast('Escreve o que mudou.'); return; }
+  if(editingEventoId){
+    const ev = mktEventos().find(x=>x.id===editingEventoId);
+    if(ev){ ev.data = data; ev.tipo = tipo; ev.titulo = titulo; ev.nota = nota; }
+    showToast('Marcação atualizada.');
+  } else {
+    mktEventos().push({ id: uid(), data, tipo, titulo, nota, createdAt: Date.now() });
+    showToast('Mudança marcada.');
+  }
+  await saveDre();
+  mktResetEventoForm();
+  renderMarketing();
+});
+document.getElementById('mktEvCancelar').addEventListener('click', mktResetEventoForm);
+document.getElementById('mktAplicar').addEventListener('click', ()=>{
+  const ini = document.getElementById('mktDataIni').value, fim = document.getElementById('mktDataFim').value;
+  if(!ini || !fim){ showToast('Preenche as duas datas.'); return; }
+  if(ini > fim){ showToast('A data inicial precisa ser antes da final.'); return; }
+  const hoje = mktHojeISO();
+  mktSel = { tipo:'custom' };
+  mktIni = ini; mktFim = fim > hoje ? hoje : fim;
+  if(diasEntre(mktIni, mktFim).length > 180){ showToast('Escolhe no máximo 180 dias por vez.'); return; }
+  document.getElementById('mktDataFim').value = mktFim;
+  renderMarketing();
+});
+document.getElementById('mktBtnPdf').addEventListener('click', mktGerarPdf);
+
 /* --- Visão geral de vendas (por mês) --- */
 let vgYear = new Date().getFullYear();
 let vgMonth = new Date().getMonth();
@@ -2825,6 +3613,7 @@ function renderAll(){
   if(isGraficosActive()) renderGraficos();
   if(isVendasDiaActive()) renderVendasDia();
   if(isVendasGeralActive()) renderVendasGeral();
+  if(isMarketingActive()) renderMarketing();
 }
 
 /* ---------------- events: sidebar nav ---------------- */
@@ -2837,6 +3626,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.page==='graficos') renderGraficos();
     if(btn.dataset.page==='painel') renderPainelCharts();
     if(btn.dataset.page==='vendas-dia') renderVendasDia();
+    if(btn.dataset.page==='marketing') renderMarketing();
     if(btn.dataset.page==='vendas-geral') renderVendasGeral();
   });
 });
