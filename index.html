@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -490,6 +491,12 @@ nav.tabs .nav-group-label{color:var(--mustard);}
 .stat .value.positive{color:#C7E6A8;}
 .stat .value.negative{color:#FFB7A3;}
 .hero-row .hint{color:var(--blue-2);}
+.lucro-toggle{display:inline-flex; margin-top:12px; border:1.5px solid rgba(251,237,200,.55); border-radius:20px; overflow:hidden;}
+.lucro-toggle button{background:transparent; color:var(--cream); border:none; padding:6px 13px; font:600 12px 'Archivo',sans-serif; cursor:pointer;}
+.lucro-toggle button.active{background:var(--mustard); color:var(--ink);}
+#btnRelGerencial{white-space:nowrap;}
+@media(max-width:700px){ .month-nav{flex-wrap:wrap;} #btnRelGerencial{margin-left:0 !important; flex:1 1 100%;} }
+.lucro-nota{font-size:11.5px; color:var(--blue-2); margin-top:7px; line-height:1.35; max-width:300px;}
 .trend-badge{font-family:'IBM Plex Mono',monospace;}
 .trend-badge.positive{background:var(--positive-soft); color:var(--positive);}
 .trend-badge.negative{background:var(--negative-soft); color:var(--negative);}
@@ -614,6 +621,7 @@ a{color:var(--blue);}
         <div class="month-label" id="mesLabel"></div>
         <button id="mesProx">›</button>
         <button class="today-btn" id="mesHoje">hoje</button>
+        <button class="btn secondary" id="btnRelGerencial" style="margin-left:auto;">Relatório gerencial (PDF)</button>
       </div>
       <div class="filtro-botoes">
         <div class="btn-group" id="anoButtons"></div>
@@ -623,8 +631,13 @@ a{color:var(--blue);}
       <div class="hero-row">
         <div class="hero-main">
           <div class="trend-badge" id="trendLucroLiquido"></div>
-          <div class="label">Lucro líquido do mês</div>
+          <div class="label" id="lblLucroLiquido">Lucro líquido do mês</div>
           <div class="value" id="kpiLucroLiquido">R$ 0,00</div>
+          <div class="lucro-toggle" id="lucroToggle" role="group" aria-label="Como mostrar o lucro líquido">
+            <button type="button" data-modo="sem" class="active">Sem retiradas</button>
+            <button type="button" data-modo="apos">Após retiradas</button>
+          </div>
+          <div class="lucro-nota" id="lucroNota"></div>
         </div>
         <div class="stat-group">
           <div class="stat"><div class="trend-badge" id="trendFaturamento"></div><div class="label">Faturamento</div><div class="value" id="kpiFaturamento">R$ 0</div></div>
@@ -1917,6 +1930,9 @@ function renderMetaRoasButtons(){
   });
 }
 
+let painelLucroModo = 'sem';
+try{ if(localStorage.getItem('painelLucroModo')==='apos') painelLucroModo = 'apos'; }catch(e){}
+
 function renderTrendBadge(id, atual, anterior){
   const el = document.getElementById(id);
   if(!el) return;
@@ -1936,15 +1952,23 @@ function renderPainel(){
   const prevDate = new Date(y, m-1, 1);
   const dPrev = computeDRE(prevDate.getFullYear(), prevDate.getMonth());
 
-  document.getElementById('kpiLucroLiquido').textContent = fmtBRL(d.lucroLiquido);
-  document.getElementById('kpiLucroLiquido').className = 'value ' + (d.lucroLiquido>=0?'positive':'negative');
+  const aposRet = painelLucroModo === 'apos';
+  const lucroMostrado = d.lucroLiquido - (aposRet ? d.retiradasMes : 0);
+  const lucroMostradoPrev = dPrev.lucroLiquido - (aposRet ? dPrev.retiradasMes : 0);
+  document.getElementById('kpiLucroLiquido').textContent = fmtBRL(lucroMostrado);
+  document.getElementById('kpiLucroLiquido').className = 'value ' + (lucroMostrado>=0?'positive':'negative');
+  document.getElementById('lblLucroLiquido').textContent = aposRet ? 'Lucro após retiradas' : 'Lucro líquido do mês';
+  document.querySelectorAll('#lucroToggle button').forEach(b=> b.classList.toggle('active', b.dataset.modo === painelLucroModo));
+  document.getElementById('lucroNota').textContent = aposRet
+    ? `Já descontadas as retiradas de ${fmtBRL(d.retiradasMes)}. Sem retiradas: ${fmtBRL(d.lucroLiquido)}.`
+    : (d.retiradasMes>0 ? `Antes das retiradas de ${fmtBRL(d.retiradasMes)} (que ficam fora do DRE).` : 'Nenhuma retirada lançada neste mês.');
   document.getElementById('kpiFaturamento').textContent = fmtBRLShort(d.manual.faturamento);
   document.getElementById('kpiCustos').textContent = fmtBRLShort(d.custos);
   document.getElementById('kpiROI').textContent = fmtPct(d.roi);
   document.getElementById('kpiROI').className = 'value ' + (d.roi>=0?'positive':'negative');
   document.getElementById('kpiROAS').textContent = fmtX(d.roas);
 
-  renderTrendBadge('trendLucroLiquido', d.lucroLiquido, dPrev.lucroLiquido);
+  renderTrendBadge('trendLucroLiquido', lucroMostrado, lucroMostradoPrev);
   renderTrendBadge('trendFaturamento', d.manual.faturamento, dPrev.manual.faturamento);
   renderTrendBadge('trendCustos', d.custos, dPrev.custos);
   renderTrendBadge('trendROI', d.roi, dPrev.roi);
@@ -3194,6 +3218,280 @@ function mktChartImagem(kind, D){
 const pdfTxt = (s) => String(s==null?'':s).replace(/[  ]/g,' ').replace(/[^ -ÿ]/g,'');
 function hexRgb(h){ const n = parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
 
+/* --- Relatório gerencial (PDF para a dona) --- */
+function gerChartImagem(cfg){
+  const canvas = document.createElement('canvas');
+  canvas.width = 800; canvas.height = 300;
+  const ch = new Chart(canvas, cfg);
+  const url = canvas.toDataURL('image/jpeg', 0.92);
+  ch.destroy();
+  return url;
+}
+function gerNice(v){ const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v/p*2)/2*p; }
+function gerCfg(labels, datasets, scales){
+  return {
+    type:'bar', data:{ labels, datasets }, plugins:[mktBgPlugin],
+    options:{
+      responsive:false, maintainAspectRatio:false, animation:false, devicePixelRatio:2,
+      layout:{ padding:{ top:26 } },
+      plugins:{ legend:{ position:'bottom', labels:{ usePointStyle:true, boxWidth:8 } } },
+      scales: Object.assign({ x:{ grid:{ display:false } }, y:{ beginAtZero:true } }, scales||{})
+    }
+  };
+}
+async function gerarRelatorioGerencial(){
+  const btn = document.getElementById('btnRelGerencial');
+  const txt0 = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Gerando PDF…';
+  try{
+    const jsPDF = await mktCarregarJsPdf();
+    const y = viewDate.getFullYear(), m = viewDate.getMonth();
+    const d = computeDRE(y,m);
+    const pDate = new Date(y, m-1, 1);
+    const dPrev = computeDRE(pDate.getFullYear(), pDate.getMonth());
+    const temPrev = dPrev.manual.faturamento>0 || dPrev.custos>0;
+    const apos = d.lucroLiquido - d.retiradasMes;
+    const aposPrev = dPrev.lucroLiquido - dPrev.retiradasMes;
+    const meta = getMetaROAS(y,m);
+    const emAndamento = (y===today.getFullYear() && m===today.getMonth());
+    const mesTxt = `${MESES[m].charAt(0).toUpperCase()}${MESES[m].slice(1)} de ${y}`;
+    const lojaNome = loja==='petnip' ? 'Petnip' : 'VivaShop';
+    const nd = (v, f) => isFinite(v) ? f(v) : '-';
+    const varTxt = (a,b) => {
+      if(!temPrev || !isFinite(b) || b===0 || !isFinite(a)) return '';
+      const p = ((a-b)/Math.abs(b))*100;
+      return `${p>=0?'+':''}${p.toLocaleString('pt-BR',{maximumFractionDigits:0})}% vs mês anterior`;
+    };
+
+    const doc = new jsPDF({ unit:'mm', format:'a4', compress:true });
+    const W=210, H=297, M=14, CW=182;
+    const AZUL=[9,76,117], MOST=[235,169,64], CREME=[251,237,200], TERRA=[150,52,23], INK=[11,42,64], MUTED=[122,106,79];
+    const VERDE=[22,87,51], VERM=[176,21,21], LINHA=[234,217,169];
+    let py = 0;
+    const novaPagina = ()=>{ doc.addPage(); py = M+2; };
+    const garantir = (h)=>{ if(py+h > H-16) novaPagina(); };
+    const titulo = (t)=>{
+      garantir(16);
+      doc.setFillColor(...MOST); doc.rect(M, py-3.4, 3.6, 3.6, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...AZUL);
+      doc.text(pdfTxt(t).toUpperCase(), M+6, py); py += 6;
+    };
+    const paragrafo = (t, size=9.5, cor=INK, bold=false, indent=0)=>{
+      doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(size); doc.setTextColor(...cor);
+      const linhas = doc.splitTextToSize(pdfTxt(t), CW-indent);
+      linhas.forEach(l=>{ garantir(5); doc.text(l, M+indent, py); py += size*0.42+1.2; });
+    };
+
+    // ---- cabeçalho
+    doc.setFillColor(...AZUL); doc.rect(0,0,W,32,'F');
+    doc.setFillColor(...MOST); doc.rect(0,32,W,2.4,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...CREME);
+    doc.text('RELATÓRIO GERENCIAL', M, 15);
+    doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(173,210,218);
+    doc.text(pdfTxt(`${lojaNome}  |  ${mesTxt}${emAndamento ? '  (mês em andamento, até hoje)' : ''}`), M, 23);
+    doc.setFontSize(8.5);
+    const agora = new Date();
+    doc.text(pdfTxt(`Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`), W-M, 15, {align:'right'});
+    py = 44;
+
+    // ---- KPIs
+    const corLucro = (v)=> v>=0 ? VERDE : VERM;
+    const kpis = [
+      ['Faturamento', fmtBRLShort(d.manual.faturamento), varTxt(d.manual.faturamento, dPrev.manual.faturamento), AZUL],
+      ['Lucro bruto', fmtBRLShort(d.manual.lucroBruto), isFinite(d.pctLucroBruto) ? `${fmtPct(d.pctLucroBruto)} do faturamento` : '', AZUL],
+      ['Custos (DRE)', fmtBRLShort(d.custos), varTxt(d.custos, dPrev.custos), AZUL],
+      ['Lucro líquido (sem retiradas)', fmtBRLShort(d.lucroLiquido), varTxt(d.lucroLiquido, dPrev.lucroLiquido), corLucro(d.lucroLiquido)],
+      ['Retiradas do proprietário', fmtBRLShort(d.retiradasMes), 'fora do DRE', TERRA],
+      ['Lucro após retiradas', fmtBRLShort(apos), varTxt(apos, aposPrev), corLucro(apos)],
+      ['ROI', nd(d.roi, fmtPct), 'lucro líquido / custos', isFinite(d.roi) ? corLucro(d.roi) : AZUL],
+      ['ROAS', nd(d.roas, fmtX), meta!=null ? `meta ${fmtX(meta)}` : 'sem meta definida', (meta!=null && isFinite(d.roas)) ? (d.roas>=meta ? VERDE : VERM) : AZUL],
+    ];
+    const kw = (CW-3*4)/4, kh = 22;
+    kpis.forEach((k,i)=>{
+      const col = i%4, row = Math.floor(i/4);
+      const x = M + col*(kw+4), yy = py + row*(kh+4);
+      doc.setFillColor(...CREME); doc.roundedRect(x, yy, kw, kh, 2, 2, 'F');
+      doc.setFillColor(...(row===0 ? MOST : TERRA)); doc.rect(x, yy, 1.6, kh, 'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+      doc.text(doc.splitTextToSize(pdfTxt(k[0]), kw-6)[0], x+4, yy+5.5);
+      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...k[3]);
+      doc.text(pdfTxt(k[1]), x+4, yy+13);
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(...MUTED);
+      doc.text(doc.splitTextToSize(pdfTxt(k[2]), kw-6)[0] || '', x+4, yy+18.4);
+    });
+    py += 2*kh + 4 + 10;
+
+    // ---- leituras automáticas
+    const leituras = [];
+    if(temPrev && isFinite(dPrev.lucroLiquido)){
+      const dif = d.lucroLiquido - dPrev.lucroLiquido;
+      leituras.push(`Lucro líquido (sem retiradas) de ${fmtBRL(d.lucroLiquido)}, ${dif>=0?'acima':'abaixo'} em ${fmtBRL(Math.abs(dif))} do mês anterior (${fmtBRL(dPrev.lucroLiquido)}).`);
+    } else {
+      leituras.push(`Lucro líquido (sem retiradas) de ${fmtBRL(d.lucroLiquido)} no mês.`);
+    }
+    if(d.retiradasMes>0){
+      if(d.lucroLiquido>0){
+        leituras.push(`As retiradas somaram ${fmtBRL(d.retiradasMes)}, ou ${fmtPct(d.retiradasMes/d.lucroLiquido)} do lucro líquido. Depois delas, sobraram ${fmtBRL(apos)}.`);
+      } else {
+        leituras.push(`Atenção: as retiradas (${fmtBRL(d.retiradasMes)}) saíram de um mês sem lucro líquido positivo; o resultado após retiradas ficou em ${fmtBRL(apos)}.`);
+      }
+      if(d.lucroLiquido>0 && apos<0) leituras.push(`As retiradas superaram o lucro líquido do mês em ${fmtBRL(-apos)}.`);
+    }
+    if(meta!=null && isFinite(d.roas)){
+      leituras.push(`ROAS de ${fmtX(d.roas)}, ${d.roas>=meta?'acima':'abaixo'} da meta de ${fmtX(meta)}${d.roas>=meta ? '.' : '; vale rever o investimento em anúncios.'}`);
+    } else if(isFinite(d.roas)){
+      leituras.push(`ROAS de ${fmtX(d.roas)} (faturamento / gasto Facebook). Nenhuma meta de ROAS definida para este mês.`);
+    }
+    if(d.facebookGasto>0 && d.manual.faturamento>0){
+      let t = `Facebook consumiu ${fmtBRL(d.facebookGasto)}, ${fmtPct(d.facebookGasto/d.manual.faturamento)} do faturamento`;
+      if(isFinite(d.custoVendaUnitAds)) t += `; custo de ${fmtBRL(d.custoVendaUnitAds)} por venda`;
+      leituras.push(t + '.');
+    }
+    const catsOrd = Object.entries(d.byCat).filter(([n,v])=>v>0 && dre.categories.some(c=>c.nome===n && c.entraDRE)).sort((a,b)=>b[1]-a[1]);
+    if(catsOrd.length && d.custos>0){
+      leituras.push(`Maior custo do mês: ${catsOrd[0][0]}, com ${fmtBRL(catsOrd[0][1])} (${fmtPct(catsOrd[0][1]/d.custos)} dos custos).`);
+    }
+    if(isFinite(d.pctLucroBruto)) leituras.push(`Margem bruta de ${fmtPct(d.pctLucroBruto)}; depois dos custos, a margem líquida ficou em ${nd(d.manual.faturamento>0 ? d.lucroLiquido/d.manual.faturamento : NaN, fmtPct)}.`);
+    if(emAndamento) leituras.push('Mês em andamento: os números consideram só o que já venceu até hoje.');
+    titulo('Leituras do mês');
+    leituras.forEach(t=>{ paragrafo('-  ' + t, 9.3, INK, false); py += 0.6; });
+    py += 4;
+
+    // ---- caixa
+    const sc = saldoCaixaAcumulado(y,m);
+    const despPagas = d.totalTodasCategorias - d.retiradasMes;
+    titulo('Caixa do mês');
+    garantir(30);
+    const caixaItens = [
+      ['Entradas no caixa', fmtBRLShort(d.entradasMes), INK],
+      ['Despesas pagas', fmtBRLShort(despPagas), INK],
+      ['Retiradas', fmtBRLShort(d.retiradasMes), TERRA],
+      ['Resultado do mês', fmtBRLShort(d.resultadoCaixaMes), corLucro(d.resultadoCaixaMes)],
+    ];
+    caixaItens.forEach((k,i)=>{
+      const x = M + i*(kw+4);
+      doc.setFillColor(...CREME); doc.roundedRect(x, py, kw, 17, 2, 2, 'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+      doc.text(pdfTxt(k[0]), x+4, py+5.5);
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...k[2]);
+      doc.text(pdfTxt(k[1]), x+4, py+12.5);
+    });
+    py += 17 + 6;
+    paragrafo(`Saldo acumulado em caixa até o fim de ${MESES[m]}: ${fmtBRL(sc.saldo)}. Resultado do mês = entradas - despesas pagas - retiradas.`, 8.8, MUTED);
+    py += 4;
+
+    // ---- gráficos
+    const meses6 = getAllMonthsRange().filter(mo => mo.y<y || (mo.y===y && mo.m<=m)).slice(-6);
+    const comp6 = meses6.map(mo=>computeDRE(mo.y, mo.m));
+    const lab6 = meses6.map(mo=>`${MESES_ABREV[mo.m]}/${String(mo.y).slice(2)}`);
+    const noLbl = ()=>'';
+    const temRet = comp6.some(c=>c.retiradasMes>0);
+    const imgH = CW*300/800;
+    garantir(imgH+14);
+    titulo(`Faturamento e lucro - últimos ${meses6.length} ${meses6.length===1?'mês':'meses'}`);
+    const ds1 = [
+      { type:'bar', label:'Faturamento', data:comp6.map(c=>c.manual.faturamento), backgroundColor:'rgba(235,169,64,.9)', borderRadius:3 },
+      { type:'bar', label:'Lucro bruto', data:comp6.map(c=>c.manual.lucroBruto), backgroundColor:'#69934F', borderRadius:3, _labelFormatter:noLbl },
+      { type:'line', label:'Lucro líquido (sem retiradas)', data:comp6.map(c=>c.lucroLiquido), borderColor:'#094C75', backgroundColor:'#094C75', borderWidth:2.5, pointRadius:3, tension:.2 },
+    ];
+    if(temRet) ds1.push({ type:'line', label:'Lucro após retiradas', data:comp6.map(c=>c.lucroLiquido-c.retiradasMes), borderColor:'#963417', backgroundColor:'#963417', borderWidth:2.5, borderDash:[6,4], pointRadius:3, tension:.2, _labelFormatter:noLbl });
+    doc.addImage(gerChartImagem(gerCfg(lab6, ds1)), 'JPEG', M, py, CW, imgH); py += imgH + 6;
+
+    garantir(imgH+14);
+    titulo('Gasto Facebook, ROAS e meta');
+    const metas = meses6.map(mo=>getMetaROAS(mo.y,mo.m));
+    const ds2 = [
+      { type:'bar', label:'Gasto Facebook (R$)', data:comp6.map(c=>c.facebookGasto), backgroundColor:'#094C75', borderRadius:3, yAxisID:'y', order:2 },
+      { type:'line', label:'ROAS', data:comp6.map(c=>isFinite(c.roas)?Number(c.roas.toFixed(2)):null), borderColor:'#963417', backgroundColor:'#963417', borderWidth:2.5, pointRadius:3, tension:.2, yAxisID:'y1', order:1, _labelFormatter:fmtCompactX },
+    ];
+    if(metas.some(v=>v!=null)) ds2.push({ type:'line', label:'Meta de ROAS', data:metas, borderColor:'#B01515', backgroundColor:'#B01515', borderWidth:2, borderDash:[6,4], pointRadius:0, tension:0, spanGaps:true, yAxisID:'y1', order:1, _labelFormatter:noLbl });
+    const maxFb = Math.max(1, ...comp6.map(c=>c.facebookGasto));
+    const maxRoas = Math.max(1, ...comp6.map(c=>isFinite(c.roas)?c.roas:0), ...metas.map(v=>v==null?0:v));
+    doc.addImage(gerChartImagem(gerCfg(lab6, ds2, {
+      y:{ beginAtZero:true, position:'left', max: gerNice(maxFb/0.55) },
+      y1:{ beginAtZero:true, position:'right', max: Math.ceil(maxRoas*1.15*2)/2, grid:{ display:false } }
+    })), 'JPEG', M, py, CW, imgH); py += imgH + 6;
+
+    // ---- despesas por categoria (barras desenhadas)
+    titulo('Para onde foi o dinheiro (custos do DRE)');
+    if(catsOrd.length){
+      const top = catsOrd.slice(0,8);
+      const resto = catsOrd.slice(8).reduce((a,[,v])=>a+v,0);
+      if(resto>0) top.push(['Outras categorias', resto]);
+      const maxV = top[0][1], barX = M+52, barMax = CW-52-42;
+      top.forEach(([nome,v],i)=>{
+        garantir(7);
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...INK);
+        doc.text(doc.splitTextToSize(pdfTxt(nome), 50)[0], M, py);
+        doc.setFillColor(...(i===0 ? MOST : [173,210,218])); doc.rect(barX, py-3.2, Math.max(0.8, v/maxV*barMax), 4, 'F');
+        doc.setFont('helvetica','bold'); doc.setTextColor(...AZUL);
+        doc.text(pdfTxt(`${fmtBRL(v)}  (${fmtPct(v/d.custos)})`), W-M, py, {align:'right'});
+        py += 6;
+      });
+      py += 1;
+      paragrafo(`Total de custos do DRE: ${fmtBRL(d.custos)}.${d.retiradasMes>0 ? ` Retiradas do proprietário (${fmtBRL(d.retiradasMes)}) ficam de fora do DRE.` : ''}`, 8.5, MUTED);
+    } else {
+      paragrafo('Nenhuma despesa lançada neste mês.', 9.5, MUTED);
+    }
+    py += 5;
+
+    // ---- DRE 3 meses
+    const m3 = [0,1,2].map(i=>{ const dt = new Date(y, m-2+i, 1); return { y:dt.getFullYear(), m:dt.getMonth() }; });
+    const x3 = m3.map(mo=>{ const g = getGroupTotals(mo.y, mo.m); return { d:g.d, totals:g.totals }; });
+    const linhas = [];
+    linhas.push({ k:'Faturamento', v:x3.map(x=>fmtBRL(x.d.manual.faturamento)), b:true });
+    linhas.push({ k:'Lucro bruto', v:x3.map(x=>fmtBRL(x.d.manual.lucroBruto)), b:true });
+    GRUPOS_DRE3.forEach(g=>{
+      if(x3.some(x=>x.totals[g]!==0)) linhas.push({ k:'(-) '+g, v:x3.map(x=>fmtBRL(x.totals[g])) });
+    });
+    linhas.push({ k:'Total de custos (DRE)', v:x3.map(x=>fmtBRL(x.d.custos)), b:true });
+    linhas.push({ k:'Lucro líquido (sem retiradas)', v:x3.map(x=>fmtBRL(x.d.lucroLiquido)), b:true, cor:x3.map(x=>corLucro(x.d.lucroLiquido)) });
+    linhas.push({ k:'(-) Retiradas do proprietário', v:x3.map(x=>fmtBRL(x.d.retiradasMes)) });
+    linhas.push({ k:'Lucro após retiradas', v:x3.map(x=>fmtBRL(x.d.lucroLiquido - x.d.retiradasMes)), b:true, cor:x3.map(x=>corLucro(x.d.lucroLiquido - x.d.retiradasMes)) });
+    linhas.push({ k:'ROI', v:x3.map(x=>nd(x.d.roi, fmtPct)) });
+    linhas.push({ k:'ROAS', v:x3.map(x=>nd(x.d.roas, fmtX)) });
+    const rh = 5.8;
+    garantir(8 + rh*(linhas.length+1) + 10);
+    titulo('DRE dos últimos 3 meses');
+    const cx = [M+78, M+114, M+150, M+CW];
+    doc.setFillColor(...AZUL); doc.rect(M, py-4, CW, rh, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...CREME);
+    doc.text('Linha', M+2, py);
+    m3.forEach((mo,i)=> doc.text(pdfTxt(`${MESES_ABREV[mo.m]}/${String(mo.y).slice(2)}`), M+CW-2-(2-i)*36, py, {align:'right'}));
+    py += rh;
+    linhas.forEach((l,li)=>{
+      if(li%2===0){ doc.setFillColor(253,247,230); doc.rect(M, py-4, CW, rh, 'F'); }
+      doc.setFont('helvetica', l.b?'bold':'normal'); doc.setFontSize(8.5); doc.setTextColor(...INK);
+      doc.text(pdfTxt(l.k), M+2, py);
+      l.v.forEach((v,i)=>{
+        doc.setTextColor(...(l.cor ? l.cor[i] : INK));
+        doc.text(pdfTxt(v), M+CW-2-(2-i)*36, py, {align:'right'});
+      });
+      py += rh;
+    });
+    doc.setDrawColor(...LINHA); doc.line(M, py-4, M+CW, py-4);
+    py += 2;
+    paragrafo('Retiradas ficam fora do DRE: não reduzem os custos, o ROI nem o ROAS; só aparecem na linha "Lucro após retiradas" e no caixa.', 8, MUTED);
+
+    // ---- rodapé em todas as páginas
+    const total = doc.getNumberOfPages();
+    for(let p=1; p<=total; p++){
+      doc.setPage(p);
+      doc.setDrawColor(...LINHA); doc.line(M, H-11, W-M, H-11);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+      doc.text(pdfTxt(`${lojaNome}  |  Relatório gerencial - ${mesTxt}`), M, H-7);
+      doc.text(`Página ${p} de ${total}`, W-M, H-7, {align:'right'});
+    }
+    doc.save(`relatorio-gerencial-${loja}-${monthKey(y,m)}.pdf`);
+    showToast('Relatório gerencial gerado.');
+  }catch(e){
+    console.error(e);
+    showToast('Não consegui gerar o PDF: ' + e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = txt0;
+  }
+}
+
 async function mktGerarPdf(){
   const btn = document.getElementById('mktBtnPdf');
   const txt0 = btn.textContent;
@@ -3265,7 +3563,7 @@ async function mktGerarPdf(){
     // destaques
     if(D.destaques.length){
       titulo('Destaques do período');
-      D.destaques.forEach(d=> paragrafo('•  ' + d));
+      D.destaques.forEach(d=> paragrafo('-  ' + d));
       y += 3;
     }
 
@@ -3646,6 +3944,12 @@ document.querySelectorAll('.loja-switch button').forEach(btn=>{
 /* ---------------- events: painel ---------------- */
 document.getElementById('mesAnt').addEventListener('click', ()=>{ viewDate.setMonth(viewDate.getMonth()-1); renderPainel(); populateMonthFilter(); });
 document.getElementById('mesProx').addEventListener('click', ()=>{ viewDate.setMonth(viewDate.getMonth()+1); renderPainel(); populateMonthFilter(); });
+document.getElementById('btnRelGerencial').addEventListener('click', gerarRelatorioGerencial);
+document.querySelectorAll('#lucroToggle button').forEach(b=> b.addEventListener('click', ()=>{
+  painelLucroModo = b.dataset.modo === 'apos' ? 'apos' : 'sem';
+  try{ localStorage.setItem('painelLucroModo', painelLucroModo); }catch(e){}
+  renderPainel();
+}));
 document.getElementById('mesHoje').addEventListener('click', ()=>{ viewDate = new Date(); viewDate.setDate(1); renderPainel(); populateMonthFilter(); });
 document.getElementById('dre3Ant').addEventListener('click', ()=>{ dre3AnchorDate = new Date(dre3AnchorDate.getFullYear(), dre3AnchorDate.getMonth()-1, 1); renderDre3Meses(); });
 document.getElementById('dre3Prox').addEventListener('click', ()=>{ dre3AnchorDate = new Date(dre3AnchorDate.getFullYear(), dre3AnchorDate.getMonth()+1, 1); renderDre3Meses(); });
